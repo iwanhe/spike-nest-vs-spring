@@ -22,6 +22,9 @@ t1=$(date +%s%3N)
 if [ "$siap" != 1 ]; then echo "Aplikasi tidak siap dalam 60 detik"; tail -50 app.log; exit 1; fi
 
 sleep 15
+if ! kill -0 "$pid" 2>/dev/null; then
+  echo "Aplikasi berhenti sendiri setelah dijalankan"; tail -50 app.log; exit 1
+fi
 rss_diam=$(awk '/VmRSS/{print $2}' "/proc/$pid/status")
 
 printf '{"siap_ms": %s, "memori_diam_kb": %s}\n' "$((t1 - t0))" "$rss_diam" > "$KELUARAN"

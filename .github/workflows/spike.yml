@@ -89,7 +89,8 @@ jobs:
           test "$kontrol" = "1000000|21164639595000.00"
 
       - name: ERP tiruan
-        run: nohup node erp-tiruan/server.mjs > erp.log 2>&1 &
+        # PORT global milik aplikasi (3000); ERP tiruan harus tetap di 4000.
+        run: PORT=4000 nohup node erp-tiruan/server.mjs > erp.log 2>&1 &
 
       - name: Bangun (NestJS)
         if: matrix.kandidat == 'nest'
@@ -113,9 +114,7 @@ jobs:
             cp -r /tmp/starter/.mvn .
             chmod +x mvnw
           fi
-          echo "::group::pom.xml"
-          cat pom.xml
-          echo "::endgroup::"
+          ../skrip/catat.sh "POM spring" < pom.xml
           mulai=$(date +%s)
           ./mvnw -B -q -DskipTests package
           echo "{\"bangun_detik\": $(( $(date +%s) - mulai ))}" > ../ukur-bangun.json
@@ -181,7 +180,8 @@ jobs:
         run: |
           ls ukur-*.json 2>/dev/null || true
           jq -s --arg k "${{ matrix.kandidat }}" 'reduce .[] as $x ({kandidat: $k}; . * $x)' ukur-*.json > "hasil-${{ matrix.kandidat }}.json" || echo '{}' > "hasil-${{ matrix.kandidat }}.json"
-          echo "HASIL_JSON=$(jq -c . "hasil-${{ matrix.kandidat }}.json")"
+          jq -c . "hasil-${{ matrix.kandidat }}.json" | skrip/catat.sh "HASIL ${{ matrix.kandidat }}"
+          if [ -f uji.tap ]; then grep -E '^(not ok|# (tests|pass|fail))|error:|expected:|actual:' uji.tap | skrip/catat.sh "UJI ${{ matrix.kandidat }}"; fi
           {
             echo "## Hasil ${{ matrix.kandidat }}"
             echo '```json'
@@ -191,7 +191,13 @@ jobs:
 
       - name: Log aplikasi
         if: always()
-        run: tail -n 80 "$APP_DIR/app.log" 2>/dev/null || echo "tidak ada log aplikasi"
+        run: |
+          if [ -f "$APP_DIR/app.log" ]; then
+            tail -n 80 "$APP_DIR/app.log"
+            grep -v '^\s*at ' "$APP_DIR/app.log" | tail -n 25 | skrip/catat.sh "LOG ${{ matrix.kandidat }}"
+          else
+            echo "tidak ada log aplikasi"
+          fi
 
       - name: Simpan hasil
         if: always()
