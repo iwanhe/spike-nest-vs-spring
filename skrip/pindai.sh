@@ -45,6 +45,8 @@ else
   pindai jalan rootfs /kerja/pindai-jar
   pindai semua fs /kerja/app-spring/pom.xml
   sumber_jalan="jar hasil build"; sumber_semua="pom.xml"
+  # Versi pustaka yang benar-benar ada di dalam jar.
+  unzip -Z1 app-spring/target/*.jar | grep -E 'lib/(tomcat-embed-core|jackson-core|jackson-databind|spring-boot|spring-core|flowable-engine)-[0-9]' | sed 's|.*/||' > versi-jar.txt
 fi
 
 jq -n --arg t "$TRIVY" --arg sj "$sumber_jalan" --arg ss "$sumber_semua" \
@@ -52,6 +54,7 @@ jq -n --arg t "$TRIVY" --arg sj "$sumber_jalan" --arg ss "$sumber_semua" \
   '{trivy: {versi: $t, saat_berjalan: ($j + {sumber: $sj}), pembanding: (if $s then $s + {sumber: $ss} else null end)}}' > "$KELUARAN"
 cat "$KELUARAN"
 {
+  [ -f versi-jar.txt ] && { echo "== isi jar"; cat versi-jar.txt; }
   echo "== $sumber_semua"; daftar trivy-semua.json
   echo "== $sumber_jalan"; daftar trivy-jalan.json
   jq -c .trivy "$KELUARAN"

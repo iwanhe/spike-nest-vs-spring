@@ -29,6 +29,15 @@ jobs:
           - nama: spring-heap256
             kandidat: spring
             java_opts: -Xmx256m
+          # Latihan menambal (S7): temuan pemindaian ditutup, lalu semua uji dijalankan ulang.
+          # NestJS: alat deploy bawaan kerangka proyek yang tidak dipakai dibuang.
+          - nama: nest-tambal
+            kandidat: nest
+            tambal: npm uninstall @nestjs/mau
+          # Spring Boot: versi Tomcat dan Jackson dinaikkan di atas versi yang dikelola Spring Boot 4.1.1.
+          - nama: spring-tambal
+            kandidat: spring
+            mvn_opts: -Dtomcat.version=11.0.25 -Djackson-bom.version=3.1.7
 
     services:
       db:
@@ -111,6 +120,7 @@ jobs:
         run: |
           mulai=$(date +%s)
           npm ci
+          ${{ matrix.tambal }}
           npx nest build
           echo "{\"bangun_detik\": $(( $(date +%s) - mulai ))}" > ../ukur-bangun.json
           echo "node dist/main" > ../perintah.txt
@@ -120,7 +130,7 @@ jobs:
         working-directory: app-spring
         run: |
           mulai=$(date +%s)
-          mvn -B -q -DskipTests package
+          mvn -B -q -DskipTests ${{ matrix.mvn_opts }} package
           echo "{\"bangun_detik\": $(( $(date +%s) - mulai ))}" > ../ukur-bangun.json
           ls -la target/*.jar
           echo "java -jar target/*.jar" > ../perintah.txt
