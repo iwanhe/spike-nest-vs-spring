@@ -21,7 +21,8 @@ done
 t1=$(date +%s%3N)
 if [ "$siap" != 1 ]; then echo "Aplikasi tidak siap dalam 60 detik"; tail -50 app.log; exit 1; fi
 
-sleep 15
+# TANPA_DIAM=1 melewati jeda 15 detik (dipakai saat aplikasi dijalankan ulang di tengah uji).
+if [ "${TANPA_DIAM:-0}" != 1 ]; then sleep 15; else sleep 1; fi
 if ! kill -0 "$pid" 2>/dev/null; then
   echo "Aplikasi berhenti sendiri setelah dijalankan"; tail -50 app.log; exit 1
 fi

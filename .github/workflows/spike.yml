@@ -138,6 +138,10 @@ jobs:
           echo "{\"uji_lulus\": ${lulus:-0}, \"uji_gagal\": ${gagal:-0}}" > ../ukur-uji.json
           cat ../ukur-uji.json
 
+      - name: Uji mati paksa di tengah alur persetujuan
+        working-directory: ${{ env.APP_DIR }}
+        run: KELUARAN=../ukur-matipaksa.json ../skrip/mati-paksa.sh "$(cat ../perintah.txt)"
+
       - name: Ukur waktu respons dan memori
         working-directory: ${{ env.APP_DIR }}
         run: KELUARAN=../ukur-beban.json ../skrip/beban.sh
