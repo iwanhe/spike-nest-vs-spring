@@ -2,7 +2,7 @@ name: Spike NestJS vs Spring Boot
 
 on:
   push:
-    branches: [main]
+    branches: [main, spike]
   workflow_dispatch:
 
 permissions:
