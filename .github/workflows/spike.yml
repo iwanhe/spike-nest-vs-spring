@@ -1,0 +1,206 @@
+name: Spike NestJS vs Spring Boot
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: spike-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  uji:
+    name: ${{ matrix.kandidat }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        kandidat: [nest, spring]
+
+    services:
+      db:
+        image: postgres:18
+        env:
+          POSTGRES_USER: spike
+          POSTGRES_PASSWORD: spike_dev_only
+          POSTGRES_DB: spike
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U spike -d spike"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 20
+
+    env:
+      DATABASE_URL: postgres://spike:spike_dev_only@localhost:5432/spike
+      PGPASSWORD: spike_dev_only
+      API_URL: http://localhost:3000
+      ERP_URL: http://localhost:4000
+      PORT: "3000"
+      MODE_UJI: "1"
+      BATAS_PERSETUJUAN: 5s
+      APP_DIR: app-${{ matrix.kandidat }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Pasang npm 12
+        run: npm install -g npm@12
+
+      - uses: actions/setup-java@v4
+        if: matrix.kandidat == 'spring'
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Catat versi dan ukuran mesin
+        run: |
+          echo "node $(node -v), npm $(npm -v)"
+          java -version 2>&1 | head -1 || true
+          psql --version
+          docker --version
+          echo "inti prosesor: $(nproc)"
+          free -m | sed -n 2p
+
+      - name: Skema (Flyway)
+        run: >
+          docker run --rm --network host
+          -v "$PWD/db/migration:/flyway/sql:ro"
+          redgate/flyway:12
+          -url=jdbc:postgresql://localhost:5432/spike -user=spike -password=spike_dev_only
+          -locations=filesystem:/flyway/sql -connectRetries=30 migrate
+
+      - name: Data awal dan angka kontrol
+        run: |
+          psql -h localhost -U spike -d spike -v ON_ERROR_STOP=1 -q -f db/seed/data_awal.sql
+          psql -h localhost -U spike -d spike -Atc "select version()"
+          kontrol=$(psql -h localhost -U spike -d spike -Atc "select count(*) || '|' || sum(total) from pengajuan")
+          echo "angka kontrol: $kontrol"
+          test "$kontrol" = "1000000|21164639595000.00"
+
+      - name: ERP tiruan
+        run: nohup node erp-tiruan/server.mjs > erp.log 2>&1 &
+
+      - name: Bangun (NestJS)
+        if: matrix.kandidat == 'nest'
+        working-directory: app-nest
+        run: |
+          mulai=$(date +%s)
+          npm ci
+          npx nest build
+          echo "{\"bangun_detik\": $(( $(date +%s) - mulai ))}" > ../ukur-bangun.json
+          echo "node dist/main" > ../perintah.txt
+
+      - name: Bangun (Spring Boot)
+        if: matrix.kandidat == 'spring'
+        working-directory: app-spring
+        run: |
+          if [ ! -f pom.xml ]; then
+            echo "pom.xml belum ada: mengambil kerangka dari start.spring.io"
+            curl -fsSL -o /tmp/starter.zip "https://start.spring.io/starter.zip?type=maven-project&language=java&javaVersion=21&groupId=id.kcsi.spike&artifactId=app-spring&name=app-spring&packageName=id.kcsi.spike&dependencies=web,data-jpa,postgresql,validation,actuator"
+            unzip -q /tmp/starter.zip -d /tmp/starter
+            cp /tmp/starter/pom.xml /tmp/starter/mvnw .
+            cp -r /tmp/starter/.mvn .
+            chmod +x mvnw
+          fi
+          echo "::group::pom.xml"
+          cat pom.xml
+          echo "::endgroup::"
+          mulai=$(date +%s)
+          ./mvnw -B -q -DskipTests package
+          echo "{\"bangun_detik\": $(( $(date +%s) - mulai ))}" > ../ukur-bangun.json
+          ls -la target/*.jar
+          echo "java -jar target/*.jar" > ../perintah.txt
+
+      - name: Simpan kerangka Spring Boot
+        if: always() && matrix.kandidat == 'spring'
+        uses: actions/upload-artifact@v4
+        with:
+          name: kerangka-spring
+          include-hidden-files: true
+          path: |
+            app-spring/pom.xml
+            app-spring/mvnw
+            app-spring/.mvn
+
+      - name: Jalankan aplikasi dan ukur waktu siap
+        working-directory: ${{ env.APP_DIR }}
+        run: KELUARAN=../ukur-mulai.json ../skrip/mulai.sh "$(cat ../perintah.txt)"
+
+      - name: Uji penerimaan
+        working-directory: uji-penerimaan
+        run: |
+          npm ci
+          set +e
+          node --test --test-reporter=tap 2>&1 | tee ../uji.tap
+          set -e
+          lulus=$(grep -E '^# pass' ../uji.tap | awk '{print $3}')
+          gagal=$(grep -E '^# fail' ../uji.tap | awk '{print $3}')
+          echo "{\"uji_lulus\": ${lulus:-0}, \"uji_gagal\": ${gagal:-0}}" > ../ukur-uji.json
+          cat ../ukur-uji.json
+
+      - name: Ukur waktu respons dan memori
+        working-directory: ${{ env.APP_DIR }}
+        run: KELUARAN=../ukur-beban.json ../skrip/beban.sh
+
+      - name: Rantai pasok (NestJS)
+        if: matrix.kandidat == 'nest'
+        working-directory: app-nest
+        run: |
+          paket_jalan=$(npm ls --all --omit=dev --parseable 2>/dev/null | tail -n +2 | wc -l)
+          paket_semua=$(npm ls --all --parseable 2>/dev/null | tail -n +2 | wc -l)
+          rentan_jalan=$(npm audit --omit=dev --json 2>/dev/null | jq -c .metadata.vulnerabilities || echo null)
+          rentan_semua=$(npm audit --json 2>/dev/null | jq -c .metadata.vulnerabilities || echo null)
+          jq -n --argjson a "$paket_jalan" --argjson b "$paket_semua" --argjson c "$rentan_jalan" --argjson d "$rentan_semua" \
+            '{paket_saat_berjalan: $a, paket_semua: $b, kerentanan_saat_berjalan: $c, kerentanan_semua: $d}' > ../ukur-pasok.json
+          cat ../ukur-pasok.json
+
+      - name: Rantai pasok (Spring Boot)
+        if: matrix.kandidat == 'spring'
+        working-directory: app-spring
+        run: |
+          ./mvnw -B -q dependency:list -DincludeScope=runtime -DoutputFile=/tmp/deps.txt
+          paket_jalan=$(grep -c ':jar:' /tmp/deps.txt)
+          jar_kb=$(du -k target/*.jar | awk '{print $1}')
+          jq -n --argjson a "$paket_jalan" --argjson j "$jar_kb" \
+            '{paket_saat_berjalan: $a, ukuran_jar_kb: $j}' > ../ukur-pasok.json
+          cat ../ukur-pasok.json
+
+      - name: Ringkasan
+        if: always()
+        run: |
+          ls ukur-*.json 2>/dev/null || true
+          jq -s --arg k "${{ matrix.kandidat }}" 'reduce .[] as $x ({kandidat: $k}; . * $x)' ukur-*.json > "hasil-${{ matrix.kandidat }}.json" || echo '{}' > "hasil-${{ matrix.kandidat }}.json"
+          echo "HASIL_JSON=$(jq -c . "hasil-${{ matrix.kandidat }}.json")"
+          {
+            echo "## Hasil ${{ matrix.kandidat }}"
+            echo '```json'
+            jq . "hasil-${{ matrix.kandidat }}.json"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Log aplikasi
+        if: always()
+        run: tail -n 80 "$APP_DIR/app.log" 2>/dev/null || echo "tidak ada log aplikasi"
+
+      - name: Simpan hasil
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hasil-${{ matrix.kandidat }}
+          path: |
+            hasil-${{ matrix.kandidat }}.json
+            uji.tap
+
+      - name: Gagal bila ada uji yang tidak lulus
+        run: test "$(jq -r .uji_gagal ukur-uji.json)" = "0"

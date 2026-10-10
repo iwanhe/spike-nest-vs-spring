@@ -1,0 +1,41 @@
+services:
+  db:
+    image: postgres:18
+    environment:
+      POSTGRES_USER: spike
+      POSTGRES_PASSWORD: spike_dev_only
+      POSTGRES_DB: spike
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U spike -d spike"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  migrasi:
+    image: redgate/flyway:12
+    command: >
+      -url=jdbc:postgresql://db:5432/spike -user=spike -password=spike_dev_only
+      -locations=filesystem:/flyway/sql -connectRetries=30 migrate
+    volumes:
+      - ./db/migration:/flyway/sql:ro
+    depends_on:
+      db:
+        condition: service_healthy
+    profiles: ["alat"]
+
+  idp:
+    image: quay.io/keycloak/keycloak:26.6.2
+    command: start-dev
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin_dev_only
+    ports:
+      - "8081:8080"
+    profiles: ["idp"]
+
+volumes:
+  pgdata:
