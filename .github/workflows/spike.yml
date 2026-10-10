@@ -67,6 +67,7 @@ jobs:
         run: |
           echo "node $(node -v), npm $(npm -v)"
           java -version 2>&1 | head -1 || true
+          mvn -v 2>/dev/null | head -1 || true
           psql --version
           docker --version
           echo "inti prosesor: $(nproc)"
@@ -106,31 +107,11 @@ jobs:
         if: matrix.kandidat == 'spring'
         working-directory: app-spring
         run: |
-          if [ ! -f pom.xml ]; then
-            echo "pom.xml belum ada: mengambil kerangka dari start.spring.io"
-            curl -fsSL -o /tmp/starter.zip "https://start.spring.io/starter.zip?type=maven-project&language=java&javaVersion=21&groupId=id.kcsi.spike&artifactId=app-spring&name=app-spring&packageName=id.kcsi.spike&dependencies=web,data-jpa,postgresql,validation,actuator"
-            unzip -q /tmp/starter.zip -d /tmp/starter
-            cp /tmp/starter/pom.xml /tmp/starter/mvnw .
-            cp -r /tmp/starter/.mvn .
-            chmod +x mvnw
-          fi
-          ../skrip/catat.sh "POM spring" < pom.xml
           mulai=$(date +%s)
-          ./mvnw -B -q -DskipTests package
+          mvn -B -q -DskipTests package
           echo "{\"bangun_detik\": $(( $(date +%s) - mulai ))}" > ../ukur-bangun.json
           ls -la target/*.jar
           echo "java -jar target/*.jar" > ../perintah.txt
-
-      - name: Simpan kerangka Spring Boot
-        if: always() && matrix.kandidat == 'spring'
-        uses: actions/upload-artifact@v4
-        with:
-          name: kerangka-spring
-          include-hidden-files: true
-          path: |
-            app-spring/pom.xml
-            app-spring/mvnw
-            app-spring/.mvn
 
       - name: Jalankan aplikasi dan ukur waktu siap
         working-directory: ${{ env.APP_DIR }}
@@ -168,7 +149,7 @@ jobs:
         if: matrix.kandidat == 'spring'
         working-directory: app-spring
         run: |
-          ./mvnw -B -q dependency:list -DincludeScope=runtime -DoutputFile=/tmp/deps.txt
+          mvn -B -q dependency:list -DincludeScope=runtime -DoutputFile=/tmp/deps.txt
           paket_jalan=$(grep -c ':jar:' /tmp/deps.txt)
           jar_kb=$(du -k target/*.jar | awk '{print $1}')
           jq -n --argjson a "$paket_jalan" --argjson j "$jar_kb" \
