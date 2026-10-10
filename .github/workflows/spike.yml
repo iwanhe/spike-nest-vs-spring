@@ -53,6 +53,9 @@ jobs:
       PORT: "3000"
       MODE_UJI: "1"
       BATAS_PERSETUJUAN: 5s
+      # Pekerja outbox dipercepat supaya uji S5 selesai dalam hitungan detik (bawaan: 1000 ms).
+      OUTBOX_JEDA_MS: "250"
+      OUTBOX_MUNDUR_MS: "500"
       APP_DIR: app-${{ matrix.kandidat }}
       JAVA_TOOL_OPTIONS: ${{ matrix.java_opts }}
 
@@ -142,6 +145,10 @@ jobs:
         working-directory: ${{ env.APP_DIR }}
         run: KELUARAN=../ukur-matipaksa.json ../skrip/mati-paksa.sh "$(cat ../perintah.txt)"
 
+      - name: Uji mati paksa di tengah pengiriman ke ERP (S5)
+        working-directory: ${{ env.APP_DIR }}
+        run: KELUARAN=../ukur-s5.json ../skrip/s5-mati-paksa.sh "$(cat ../perintah.txt)"
+
       - name: Ukur waktu respons dan memori
         working-directory: ${{ env.APP_DIR }}
         run: KELUARAN=../ukur-beban.json ../skrip/beban.sh
@@ -169,13 +176,19 @@ jobs:
             '{paket_saat_berjalan: $a, ukuran_jar_kb: $j}' > ../ukur-pasok.json
           cat ../ukur-pasok.json
 
+      - name: Pindai kerentanan dengan Trivy (S7)
+        if: matrix.nama != 'spring-heap256'
+        run: |
+          KELUARAN=ukur-trivy.json skrip/pindai.sh "${{ matrix.kandidat }}"
+          skrip/catat.sh "TRIVY ${{ matrix.nama }}" < trivy-daftar.txt
+
       - name: Ringkasan
         if: always()
         run: |
           ls ukur-*.json 2>/dev/null || true
           jq -s --arg k "${{ matrix.nama }}" 'reduce .[] as $x ({kandidat: $k}; . * $x)' ukur-*.json > "hasil-${{ matrix.nama }}.json" || echo '{}' > "hasil-${{ matrix.nama }}.json"
           jq -c . "hasil-${{ matrix.nama }}.json" | skrip/catat.sh "HASIL ${{ matrix.nama }}"
-          if [ -f uji.tap ]; then grep -E '^(not ok|# (tests|pass|fail))|error:|expected:|actual:' uji.tap | skrip/catat.sh "UJI ${{ matrix.nama }}"; fi
+          if [ -f uji.tap ]; then grep -E '^(ok|not ok|# (tests|pass|fail))|error:|expected:|actual:' uji.tap | skrip/catat.sh "UJI ${{ matrix.nama }}"; fi
           {
             echo "## Hasil ${{ matrix.kandidat }}"
             echo '```json'
@@ -201,6 +214,8 @@ jobs:
           path: |
             hasil-${{ matrix.nama }}.json
             uji.tap
+            trivy-*.json
+            trivy-daftar.txt
 
       - name: Gagal bila ada uji yang tidak lulus
         run: test "$(jq -r .uji_gagal ukur-uji.json)" = "0"

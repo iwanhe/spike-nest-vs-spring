@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { WorkflowsModule, WorkflowStorage } from '@nestjs/workflows';
 import { fromTypeOrm, PostgresWorkflowStore } from '@nestjs/workflows/postgres';
 import { DataSource } from 'typeorm';
+import { OutboxPekerja } from './outbox/outbox.pekerja.js';
 import { LaporanController } from './laporan/laporan.controller.js';
 import { PengajuanModule } from './pengajuan/pengajuan.module.js';
 import { PersetujuanController } from './persetujuan/persetujuan.controller.js';
@@ -29,6 +30,7 @@ import { PersetujuanWorkflow } from './persetujuan/persetujuan.workflow.js';
         new PostgresWorkflowStore({ executor: fromTypeOrm(dataSource) }, storage),
     },
     PersetujuanWorkflow,
+    OutboxPekerja,
   ],
 })
 export class AppModule {}
