@@ -14,13 +14,21 @@ concurrency:
 
 jobs:
   uji:
-    name: ${{ matrix.kandidat }}
+    name: ${{ matrix.nama }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
-        kandidat: [nest, spring]
+        include:
+          - nama: nest
+            kandidat: nest
+          - nama: spring
+            kandidat: spring
+          # Sama dengan spring, tetapi heap JVM dibatasi 256 MB untuk melihat kebutuhan memori nyata.
+          - nama: spring-heap256
+            kandidat: spring
+            java_opts: -Xmx256m
 
     services:
       db:
@@ -46,6 +54,7 @@ jobs:
       MODE_UJI: "1"
       BATAS_PERSETUJUAN: 5s
       APP_DIR: app-${{ matrix.kandidat }}
+      JAVA_TOOL_OPTIONS: ${{ matrix.java_opts }}
 
     steps:
       - uses: actions/checkout@v4
@@ -160,13 +169,13 @@ jobs:
         if: always()
         run: |
           ls ukur-*.json 2>/dev/null || true
-          jq -s --arg k "${{ matrix.kandidat }}" 'reduce .[] as $x ({kandidat: $k}; . * $x)' ukur-*.json > "hasil-${{ matrix.kandidat }}.json" || echo '{}' > "hasil-${{ matrix.kandidat }}.json"
-          jq -c . "hasil-${{ matrix.kandidat }}.json" | skrip/catat.sh "HASIL ${{ matrix.kandidat }}"
-          if [ -f uji.tap ]; then grep -E '^(not ok|# (tests|pass|fail))|error:|expected:|actual:' uji.tap | skrip/catat.sh "UJI ${{ matrix.kandidat }}"; fi
+          jq -s --arg k "${{ matrix.nama }}" 'reduce .[] as $x ({kandidat: $k}; . * $x)' ukur-*.json > "hasil-${{ matrix.nama }}.json" || echo '{}' > "hasil-${{ matrix.nama }}.json"
+          jq -c . "hasil-${{ matrix.nama }}.json" | skrip/catat.sh "HASIL ${{ matrix.nama }}"
+          if [ -f uji.tap ]; then grep -E '^(not ok|# (tests|pass|fail))|error:|expected:|actual:' uji.tap | skrip/catat.sh "UJI ${{ matrix.nama }}"; fi
           {
             echo "## Hasil ${{ matrix.kandidat }}"
             echo '```json'
-            jq . "hasil-${{ matrix.kandidat }}.json"
+            jq . "hasil-${{ matrix.nama }}.json"
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
 
@@ -175,7 +184,7 @@ jobs:
         run: |
           if [ -f "$APP_DIR/app.log" ]; then
             tail -n 80 "$APP_DIR/app.log"
-            grep -v '^\s*at ' "$APP_DIR/app.log" | tail -n 25 | skrip/catat.sh "LOG ${{ matrix.kandidat }}"
+            grep -v '^\s*at ' "$APP_DIR/app.log" | tail -n 25 | skrip/catat.sh "LOG ${{ matrix.nama }}"
           else
             echo "tidak ada log aplikasi"
           fi
@@ -184,9 +193,9 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: hasil-${{ matrix.kandidat }}
+          name: hasil-${{ matrix.nama }}
           path: |
-            hasil-${{ matrix.kandidat }}.json
+            hasil-${{ matrix.nama }}.json
             uji.tap
 
       - name: Gagal bila ada uji yang tidak lulus
