@@ -1,0 +1,9 @@
+# Pengecualian pemindaian kerentanan (dibaca Trivy).
+# Satu baris per temuan yang SENGAJA diterima. Setiap baris wajib punya alasan di komentar di atasnya
+# dan tanggal kedaluwarsa, supaya pengecualian ditinjau ulang dan tidak menumpuk selamanya.
+#
+# Format:
+#   # Alasan: <mengapa aman diterima>, pemilik: <nama>, tiket: <nomor>
+#   CVE-0000-00000 exp:2027-01-31
+#
+# Saat ini belum ada pengecualian.

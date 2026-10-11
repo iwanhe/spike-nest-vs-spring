@@ -32,15 +32,6 @@ jobs:
           - nama: spring-heap256
             kandidat: spring
             java_opts: -Xmx256m
-          # Latihan menambal (S7): temuan pemindaian ditutup, lalu semua uji dijalankan ulang.
-          # NestJS: alat deploy bawaan kerangka proyek yang tidak dipakai dibuang.
-          - nama: nest-tambal
-            kandidat: nest
-            tambal: npm uninstall @nestjs/mau
-          # Spring Boot: versi Tomcat dan Jackson dinaikkan di atas versi yang dikelola Spring Boot 4.1.1.
-          - nama: spring-tambal
-            kandidat: spring
-            mvn_opts: -Dtomcat.version=11.0.25 -Djackson-bom.version=3.1.7
 
     services:
       db:
@@ -133,7 +124,6 @@ jobs:
         run: |
           mulai=$(date +%s)
           npm ci
-          ${{ matrix.tambal }}
           npx nest build
           echo "{\"bangun_detik\": $(( $(date +%s) - mulai ))}" > ../ukur-bangun.json
           echo "node dist/main" > ../perintah.txt
@@ -143,7 +133,7 @@ jobs:
         working-directory: app-spring
         run: |
           mulai=$(date +%s)
-          mvn -B -q -DskipTests ${{ matrix.mvn_opts }} package
+          mvn -B -q -DskipTests package
           echo "{\"bangun_detik\": $(( $(date +%s) - mulai ))}" > ../ukur-bangun.json
           ls -la target/*.jar
           echo "java -jar target/*.jar" > ../perintah.txt
@@ -251,8 +241,13 @@ jobs:
       - name: Pindai kerentanan dengan Trivy (S7)
         if: matrix.nama != 'spring-heap256'
         run: |
+          # Gerbang build: skrip keluar dengan kode 1 bila ada temuan kritis atau tinggi yang sudah punya perbaikan.
+          set +e
           KELUARAN=ukur-trivy.json skrip/pindai.sh "${{ matrix.kandidat }}"
+          kode=$?
+          set -e
           skrip/catat.sh "TRIVY ${{ matrix.nama }}" < trivy-daftar.txt
+          exit $kode
 
       - name: Ringkasan
         if: always()
@@ -303,4 +298,5 @@ jobs:
             and .ekspor_100000.status == "SELESAI" and .ekspor_1000000.status == "SELESAI"
             and .s6_operasional == "lulus"
             and ($perlu_wadah == "tidak" or .wadah.hasil == "lulus")
+            and ($perlu_wadah == "tidak" or .trivy.gerbang == "lulus")
           ' --arg perlu_wadah "${{ matrix.nama == 'spring-heap256' && 'tidak' || 'ya' }}" "hasil-${{ matrix.nama }}.json"

@@ -28,6 +28,15 @@
 	</scm>
 	<properties>
 		<java.version>21</java.version>
+		<!--
+			Tambalan keamanan, 11 Oktober 2026. Spring Boot 4.1.1 membawa Tomcat 11.0.24 dan Jackson 3.1.5,
+			yang dilaporkan punya 3 kerentanan kritis dan 7 tinggi/sedang. Dua properti ini menaikkan keduanya
+			satu sampai dua rilis patch di atas versi yang dikelola Spring Boot.
+			HAPUS kedua properti ini setelah naik ke rilis Spring Boot yang sudah membawa versi tersebut
+			atau yang lebih baru; bila terlupa, properti ini justru menahan versi lama.
+		-->
+		<tomcat.version>11.0.25</tomcat.version>
+		<jackson-bom.version>3.1.7</jackson-bom.version>
 	</properties>
 	<dependencies>
 		<dependency>
