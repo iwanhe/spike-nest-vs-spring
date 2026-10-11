@@ -1,0 +1,306 @@
+name: Spike NestJS vs Spring Boot
+
+on:
+  push:
+    branches: [main, spike]
+  # Setiap hari pukul 06.17 WIB (23.17 UTC). Jadwal hanya berlaku untuk file yang ada di branch utama.
+  schedule:
+    - cron: "17 23 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: spike-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  uji:
+    name: ${{ matrix.nama }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - nama: nest
+            kandidat: nest
+          - nama: spring
+            kandidat: spring
+          # Sama dengan spring, tetapi heap JVM dibatasi 256 MB untuk melihat kebutuhan memori nyata.
+          - nama: spring-heap256
+            kandidat: spring
+            java_opts: -Xmx256m
+          # Latihan menambal (S7): temuan pemindaian ditutup, lalu semua uji dijalankan ulang.
+          # NestJS: alat deploy bawaan kerangka proyek yang tidak dipakai dibuang.
+          - nama: nest-tambal
+            kandidat: nest
+            tambal: npm uninstall @nestjs/mau
+          # Spring Boot: versi Tomcat dan Jackson dinaikkan di atas versi yang dikelola Spring Boot 4.1.1.
+          - nama: spring-tambal
+            kandidat: spring
+            mvn_opts: -Dtomcat.version=11.0.25 -Djackson-bom.version=3.1.7
+
+    services:
+      db:
+        image: postgres:18
+        env:
+          POSTGRES_USER: spike
+          POSTGRES_PASSWORD: spike_dev_only
+          POSTGRES_DB: spike
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U spike -d spike"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 20
+
+    env:
+      DATABASE_URL: postgres://spike:spike_dev_only@localhost:5432/spike
+      PGPASSWORD: spike_dev_only
+      API_URL: http://localhost:3000
+      ERP_URL: http://localhost:4000
+      PORT: "3000"
+      MODE_UJI: "1"
+      BATAS_PERSETUJUAN: 5s
+      # Pekerja outbox dipercepat supaya uji S5 selesai dalam hitungan detik (bawaan: 1000 ms).
+      OUTBOX_JEDA_MS: "250"
+      OUTBOX_MUNDUR_MS: "500"
+      APP_DIR: app-${{ matrix.kandidat }}
+      SEHAT_URL: ${{ matrix.kandidat == 'nest' && 'http://localhost:3000/sehat' || 'http://localhost:3000/actuator/health' }}
+      PENERBIT_TOKEN: http://localhost:8081/realms/spike
+      JAVA_TOOL_OPTIONS: ${{ matrix.java_opts }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Dijalankan paling awal supaya sudah siap saat uji keamanan (S6) dimulai.
+      - name: Penyedia identitas (Keycloak) di latar
+        run: >
+          docker run -d --name idp -p 8081:8080
+          -e KC_BOOTSTRAP_ADMIN_USERNAME=admin -e KC_BOOTSTRAP_ADMIN_PASSWORD=admin_dev_only
+          -v "$PWD/idp/realm-spike.json:/opt/keycloak/data/import/realm-spike.json:ro"
+          quay.io/keycloak/keycloak:26.6.2 start-dev --import-realm
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Pasang npm 12
+        run: npm install -g npm@12
+
+      - uses: actions/setup-java@v4
+        if: matrix.kandidat == 'spring'
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Catat versi dan ukuran mesin
+        run: |
+          echo "node $(node -v), npm $(npm -v)"
+          java -version 2>&1 | head -1 || true
+          mvn -v 2>/dev/null | head -1 || true
+          psql --version
+          docker --version
+          echo "inti prosesor: $(nproc)"
+          free -m | sed -n 2p
+
+      - name: Skema (Flyway)
+        run: >
+          docker run --rm --network host
+          -v "$PWD/db/migration:/flyway/sql:ro"
+          redgate/flyway:12
+          -url=jdbc:postgresql://localhost:5432/spike -user=spike -password=spike_dev_only
+          -locations=filesystem:/flyway/sql -connectRetries=30 migrate
+
+      - name: Data awal dan angka kontrol
+        run: |
+          psql -h localhost -U spike -d spike -v ON_ERROR_STOP=1 -q -f db/seed/data_awal.sql
+          psql -h localhost -U spike -d spike -Atc "select version()"
+          kontrol=$(psql -h localhost -U spike -d spike -Atc "select count(*) || '|' || sum(total) from pengajuan")
+          echo "angka kontrol: $kontrol"
+          test "$kontrol" = "1000000|21164639595000.00"
+
+      - name: ERP tiruan
+        # PORT global milik aplikasi (3000); ERP tiruan harus tetap di 4000.
+        run: PORT=4000 nohup node erp-tiruan/server.mjs > erp.log 2>&1 &
+
+      - name: Bangun (NestJS)
+        if: matrix.kandidat == 'nest'
+        working-directory: app-nest
+        run: |
+          mulai=$(date +%s)
+          npm ci
+          ${{ matrix.tambal }}
+          npx nest build
+          echo "{\"bangun_detik\": $(( $(date +%s) - mulai ))}" > ../ukur-bangun.json
+          echo "node dist/main" > ../perintah.txt
+
+      - name: Bangun (Spring Boot)
+        if: matrix.kandidat == 'spring'
+        working-directory: app-spring
+        run: |
+          mulai=$(date +%s)
+          mvn -B -q -DskipTests ${{ matrix.mvn_opts }} package
+          echo "{\"bangun_detik\": $(( $(date +%s) - mulai ))}" > ../ukur-bangun.json
+          ls -la target/*.jar
+          echo "java -jar target/*.jar" > ../perintah.txt
+
+      - name: Jalankan aplikasi dan ukur waktu siap
+        working-directory: ${{ env.APP_DIR }}
+        run: KELUARAN=../ukur-mulai.json ../skrip/mulai.sh "$(cat ../perintah.txt)"
+
+      - name: Uji penerimaan
+        working-directory: uji-penerimaan
+        run: |
+          npm ci
+          set +e
+          node --test --test-reporter=tap 2>&1 | tee ../uji.tap
+          set -e
+          lulus=$(grep -E '^# pass' ../uji.tap | awk '{print $3}')
+          gagal=$(grep -E '^# fail' ../uji.tap | awk '{print $3}')
+          echo "{\"uji_lulus\": ${lulus:-0}, \"uji_gagal\": ${gagal:-0}}" > ../ukur-uji.json
+          cat ../ukur-uji.json
+
+      - name: Uji mati paksa di tengah alur persetujuan
+        working-directory: ${{ env.APP_DIR }}
+        run: KELUARAN=../ukur-matipaksa.json ../skrip/mati-paksa.sh "$(cat ../perintah.txt)"
+
+      - name: Uji mati paksa di tengah pengiriman ke ERP (S5)
+        working-directory: ${{ env.APP_DIR }}
+        run: KELUARAN=../ukur-s5.json ../skrip/s5-mati-paksa.sh "$(cat ../perintah.txt)"
+
+      - name: Ukur waktu respons dan memori
+        working-directory: ${{ env.APP_DIR }}
+        run: KELUARAN=../ukur-beban.json ../skrip/beban.sh
+
+      - name: Ukur ekspor besar (S4)
+        working-directory: ${{ env.APP_DIR }}
+        run: |
+          KELUARAN=../ukur-ekspor-a.json ../skrip/ekspor.sh 100000
+          KELUARAN=../ukur-ekspor-b.json ../skrip/ekspor.sh 1000000
+
+      - name: Jalankan ulang dengan pemeriksaan token dan log JSON (S6)
+        working-directory: ${{ env.APP_DIR }}
+        env:
+          AUTH_ISSUER: ${{ env.PENERBIT_TOKEN }}
+          LOG_JSON: "1"
+          LOGGING_STRUCTURED_FORMAT_CONSOLE: ecs
+          TANPA_DIAM: "1"
+        run: |
+          siap=0
+          for _ in $(seq 1 180); do
+            if curl -sf "$AUTH_ISSUER/.well-known/openid-configuration" > /dev/null; then siap=1; break; fi
+            sleep 1
+          done
+          if [ "$siap" != 1 ]; then echo "Keycloak tidak siap"; docker logs idp 2>&1 | tail -40; exit 1; fi
+          pid=$(cat app.pid); kill "$pid"
+          for _ in $(seq 1 100); do kill -0 "$pid" 2>/dev/null || break; sleep 0.1; done
+          cp app.log app-tahap1.log
+          KELUARAN=/tmp/mulai-s6.json ../skrip/mulai.sh "$(cat ../perintah.txt)"
+
+      - name: Uji keamanan (S6)
+        working-directory: uji-penerimaan
+        env:
+          AUTH_ISSUER: ${{ env.PENERBIT_TOKEN }}
+        run: |
+          set +e
+          node --test --test-reporter=tap s6-keamanan.test.mjs 2>&1 | tee ../uji-s6.tap
+          set -e
+          lulus=$(grep -E '^# pass' ../uji-s6.tap | awk '{print $3}')
+          gagal=$(grep -E '^# fail' ../uji-s6.tap | awk '{print $3}')
+          echo "{\"uji_s6_lulus\": ${lulus:-0}, \"uji_s6_gagal\": ${gagal:-1}}" > ../ukur-uji-s6.json
+          grep -oE 'uji-[0-9a-f-]{36}' ../uji-s6.tap | head -1 > ../id-korelasi.txt || true
+          cat ../ukur-uji-s6.json
+
+      - name: Jejak log dan health check saat database mati (S6)
+        continue-on-error: true
+        working-directory: ${{ env.APP_DIR }}
+        run: ID_KORELASI="$(cat ../id-korelasi.txt)" KELUARAN=../ukur-s6.json ../skrip/s6-operasional.sh
+
+      - name: Image container (S6)
+        if: matrix.nama != 'spring-heap256'
+        continue-on-error: true
+        run: KELUARAN=ukur-wadah.json skrip/wadah.sh "${{ matrix.kandidat }}"
+
+      - name: Rantai pasok (NestJS)
+        if: matrix.kandidat == 'nest'
+        working-directory: app-nest
+        run: |
+          paket_jalan=$(npm ls --all --omit=dev --parseable 2>/dev/null | tail -n +2 | wc -l)
+          paket_semua=$(npm ls --all --parseable 2>/dev/null | tail -n +2 | wc -l)
+          rentan_jalan=$(npm audit --omit=dev --json 2>/dev/null | jq -c .metadata.vulnerabilities || echo null)
+          rentan_semua=$(npm audit --json 2>/dev/null | jq -c .metadata.vulnerabilities || echo null)
+          jq -n --argjson a "$paket_jalan" --argjson b "$paket_semua" --argjson c "$rentan_jalan" --argjson d "$rentan_semua" \
+            '{paket_saat_berjalan: $a, paket_semua: $b, kerentanan_saat_berjalan: $c, kerentanan_semua: $d}' > ../ukur-pasok.json
+          cat ../ukur-pasok.json
+
+      - name: Rantai pasok (Spring Boot)
+        if: matrix.kandidat == 'spring'
+        working-directory: app-spring
+        run: |
+          mvn -B -q dependency:list -DincludeScope=runtime -DoutputFile=/tmp/deps.txt
+          paket_jalan=$(grep -c ':jar:' /tmp/deps.txt)
+          jar_kb=$(du -k target/*.jar | awk '{print $1}')
+          jq -n --argjson a "$paket_jalan" --argjson j "$jar_kb" \
+            '{paket_saat_berjalan: $a, ukuran_jar_kb: $j}' > ../ukur-pasok.json
+          cat ../ukur-pasok.json
+
+      - name: Pindai kerentanan dengan Trivy (S7)
+        if: matrix.nama != 'spring-heap256'
+        run: |
+          KELUARAN=ukur-trivy.json skrip/pindai.sh "${{ matrix.kandidat }}"
+          skrip/catat.sh "TRIVY ${{ matrix.nama }}" < trivy-daftar.txt
+
+      - name: Ringkasan
+        if: always()
+        run: |
+          ls ukur-*.json 2>/dev/null || true
+          jq -s --arg k "${{ matrix.nama }}" 'reduce .[] as $x ({kandidat: $k}; . * $x)' ukur-*.json > "hasil-${{ matrix.nama }}.json" || echo '{}' > "hasil-${{ matrix.nama }}.json"
+          # Anotasi dibagi dua supaya tidak terpotong: ukuran inti, lalu S4 dan S6.
+          pilih='with_entries(select(.key | test("^(ekspor_|s6_|wadah|uji_s6_)")))'
+          jq -c "with_entries(select(.key | test(\"^(ekspor_|s6_|wadah|uji_s6_)\") | not))" "hasil-${{ matrix.nama }}.json" | skrip/catat.sh "HASIL ${{ matrix.nama }}"
+          jq -c "$pilih" "hasil-${{ matrix.nama }}.json" | skrip/catat.sh "S4S6 ${{ matrix.nama }}"
+          saring='^\s*(ok|not ok)|^# (tests|pass|fail|skipped)|^\s*# (sha256|lama ekspor|ukuran)|error:|expected:|actual:'
+          if [ -f uji.tap ]; then grep -E "$saring" uji.tap | skrip/catat.sh "UJI ${{ matrix.nama }}"; fi
+          if [ -f uji-s6.tap ]; then grep -E "$saring" uji-s6.tap | skrip/catat.sh "UJIS6 ${{ matrix.nama }}"; fi
+          {
+            echo "## Hasil ${{ matrix.kandidat }}"
+            echo '```json'
+            jq . "hasil-${{ matrix.nama }}.json"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Log aplikasi
+        if: always()
+        run: |
+          if [ -f "$APP_DIR/app.log" ]; then
+            tail -n 80 "$APP_DIR/app.log"
+            grep -v '^\s*at ' "$APP_DIR/app.log" | tail -n 25 | skrip/catat.sh "LOG ${{ matrix.nama }}"
+          else
+            echo "tidak ada log aplikasi"
+          fi
+
+      - name: Simpan hasil
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hasil-${{ matrix.nama }}
+          path: |
+            hasil-${{ matrix.nama }}.json
+            uji.tap
+            uji-s6.tap
+            trivy-*.json
+            trivy-daftar.txt
+
+      - name: Gagal bila ada uji yang tidak lulus
+        run: |
+          jq -e '
+            .uji_gagal == 0 and .uji_s6_gagal == 0 and .uji_s6_lulus > 0
+            and .mati_paksa == "lulus" and .s5_mati_paksa == "lulus"
+            and .ekspor_100000.status == "SELESAI" and .ekspor_1000000.status == "SELESAI"
+            and .s6_operasional == "lulus"
+            and ($perlu_wadah == "tidak" or .wadah.hasil == "lulus")
+          ' --arg perlu_wadah "${{ matrix.nama == 'spring-heap256' && 'tidak' || 'ya' }}" "hasil-${{ matrix.nama }}.json"

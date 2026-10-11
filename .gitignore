@@ -1,0 +1,6 @@
+.env
+node_modules/
+dist/
+target/
+*.log
+ekspor-keluar/
