@@ -302,5 +302,5 @@ jobs:
             and .mati_paksa == "lulus" and .s5_mati_paksa == "lulus"
             and .ekspor_100000.status == "SELESAI" and .ekspor_1000000.status == "SELESAI"
             and .s6_operasional == "lulus"
-            and ((has("wadah") | not) or .wadah.hasil == "lulus")
-          ' "hasil-${{ matrix.nama }}.json"
+            and ($perlu_wadah == "tidak" or .wadah.hasil == "lulus")
+          ' --arg perlu_wadah "${{ matrix.nama == 'spring-heap256' && 'tidak' || 'ya' }}" "hasil-${{ matrix.nama }}.json"

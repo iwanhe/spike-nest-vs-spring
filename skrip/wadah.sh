@@ -31,12 +31,13 @@ docker rm -f uji-wadah > /dev/null
 mkdir -p "$HOME/.cache/trivy"
 docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "$HOME/.cache/trivy:/root/.cache/trivy" \
   "$TRIVY" image --scanners vuln --pkg-types os --format json --quiet "$IMAGE" > trivy-image.json || echo '{}' > trivy-image.json
-os=$(jq -c '{dasar: (.Metadata.OS.Family // "?") + " " + (.Metadata.OS.Name // ""),
+os=$(jq -c '{dasar: ((.Metadata.OS.Family // "?") + " " + (.Metadata.OS.Name // "")),
   total: ([.Results[]?.Vulnerabilities[]?] | length),
   kritis: ([.Results[]?.Vulnerabilities[]? | select(.Severity == "CRITICAL")] | length),
   tinggi: ([.Results[]?.Vulnerabilities[]? | select(.Severity == "HIGH")] | length),
   ada_perbaikan: ([.Results[]?.Vulnerabilities[]? | select((.FixedVersion // "") != "")] | length)}' trivy-image.json)
 
+os=${os:-null}
 hasil=gagal; [ "$uid" != 0 ] && [ "$kode" = 200 ] && hasil=lulus
 jq -n --arg h "$hasil" --arg u "$uid" --arg k "$kode" --argjson m "$ukuran_mb" --argjson b "$bangun" --argjson os "$os" \
   '{wadah: {hasil: $h, uid: $u, sehat: $k, ukuran_mb: $m, bangun_detik: $b, kerentanan_os: $os}}' > "$KELUARAN"
