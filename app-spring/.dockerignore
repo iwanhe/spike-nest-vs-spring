@@ -1,0 +1,9 @@
+src
+*.log
+app.pid
+ekspor-keluar
+target/classes
+target/generated-sources
+target/maven-status
+target/maven-archiver
+target/*.original

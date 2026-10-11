@@ -1,5 +1,6 @@
 package id.kcsi.spike.outbox;
 
+import id.kcsi.spike.umum.IdKorelasiFilter;
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -10,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -37,7 +39,8 @@ public class OutboxPekerja {
                          LIMIT ?
                            FOR UPDATE SKIP LOCKED)
         RETURNING o.id, o.payload, o.percobaan)
-      SELECT id::text AS id, payload::text AS payload, percobaan FROM klaim""";
+      SELECT id::text AS id, payload::text AS payload, payload->>'idKorelasi' AS id_korelasi, percobaan
+        FROM klaim""";
 
   private final JdbcTemplate jdbc;
   private final String erpUrl;
@@ -70,7 +73,7 @@ public class OutboxPekerja {
     for (Map<String, Object> b : baris) {
       String id = (String) b.get("id");
       int percobaan = ((Number) b.get("percobaan")).intValue();
-      if (kirim(id, (String) b.get("payload"))) {
+      if (kirim(id, (String) b.get("payload"), (String) b.get("id_korelasi"))) {
         jdbc.update("UPDATE outbox SET status = 'TERKIRIM', terkirim_pada = now() WHERE id = ?::uuid", id);
       } else if (percobaan >= maksPercobaan) {
         jdbc.update("UPDATE outbox SET status = 'GAGAL' WHERE id = ?::uuid", id);
@@ -78,21 +81,28 @@ public class OutboxPekerja {
     }
   }
 
-  private boolean kirim(String id, String payload) {
-    HttpRequest permintaan = HttpRequest.newBuilder(URI.create(erpUrl + "/erp/pengajuan"))
+  private boolean kirim(String id, String payload, String idKorelasi) {
+    HttpRequest.Builder pembangun = HttpRequest.newBuilder(URI.create(erpUrl + "/erp/pengajuan"))
         .timeout(Duration.ofMillis(batasMs))
         .header("content-type", "application/json")
         .header("idempotency-key", id)
-        .POST(HttpRequest.BodyPublishers.ofString(payload))
-        .build();
+        .POST(HttpRequest.BodyPublishers.ofString(payload));
+    // ID korelasi dari permintaan asal ikut dicatat dan diteruskan ke ERP (S6).
+    if (idKorelasi != null) {
+      pembangun.header("x-id-korelasi", idKorelasi);
+      MDC.put(IdKorelasiFilter.KUNCI, idKorelasi);
+    }
     try {
-      HttpResponse<String> jawaban = http.send(permintaan, HttpResponse.BodyHandlers.ofString());
+      log.info("kirim ke ERP, idOutbox={}", id);
+      HttpResponse<String> jawaban = http.send(pembangun.build(), HttpResponse.BodyHandlers.ofString());
       return jawaban.statusCode() / 100 == 2;
     } catch (IOException e) {
       return false; // batas waktu atau koneksi putus: dicoba lagi nanti
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
       return false;
+    } finally {
+      MDC.remove(IdKorelasiFilter.KUNCI);
     }
   }
 }

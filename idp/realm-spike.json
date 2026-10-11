@@ -1,0 +1,28 @@
+{
+  "realm": "spike",
+  "enabled": true,
+  "roles": { "realm": [ { "name": "pemohon" }, { "name": "penyetuju" } ] },
+  "clients": [
+    {
+      "clientId": "spike-api",
+      "enabled": true,
+      "publicClient": true,
+      "directAccessGrantsEnabled": true,
+      "standardFlowEnabled": false
+    }
+  ],
+  "users": [
+    {
+      "username": "budi", "enabled": true,
+      "email": "budi@contoh.test", "emailVerified": true, "firstName": "Budi", "lastName": "Pemohon",
+      "credentials": [ { "type": "password", "value": "budi_dev_only", "temporary": false } ],
+      "realmRoles": [ "pemohon" ]
+    },
+    {
+      "username": "sari", "enabled": true,
+      "email": "sari@contoh.test", "emailVerified": true, "firstName": "Sari", "lastName": "Penyetuju",
+      "credentials": [ { "type": "password", "value": "sari_dev_only", "temporary": false } ],
+      "realmRoles": [ "penyetuju" ]
+    }
+  ]
+}

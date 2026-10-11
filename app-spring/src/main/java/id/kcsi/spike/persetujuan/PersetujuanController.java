@@ -1,5 +1,6 @@
 package id.kcsi.spike.persetujuan;
 
+import java.security.Principal;
 import java.util.Map;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
@@ -30,8 +31,12 @@ public class PersetujuanController {
 
   @PostMapping("/keputusan")
   @ResponseStatus(HttpStatus.ACCEPTED)
-  public Map<String, Boolean> putuskan(@PathVariable UUID id, @RequestBody Keputusan body) {
-    service.putuskan(id, body.keputusan(), body.penyetuju());
+  public Map<String, Boolean> putuskan(
+      @PathVariable UUID id, @RequestBody Keputusan body, Principal pelaku) {
+    // Bila ada token, nama penyetuju diambil dari token, bukan dari isi permintaan.
+    // Siapa yang boleh memanggil alamat ini diatur di KeamananConfig.
+    String penyetuju = pelaku != null ? pelaku.getName() : body.penyetuju();
+    service.putuskan(id, body.keputusan(), penyetuju);
     return Map.of("diterima", true);
   }
 }

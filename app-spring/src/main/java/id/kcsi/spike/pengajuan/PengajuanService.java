@@ -3,6 +3,8 @@ package id.kcsi.spike.pengajuan;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.UUID;
+import id.kcsi.spike.umum.IdKorelasiFilter;
+import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -51,8 +53,8 @@ public class PengajuanService {
         p.id, p.pemohon);
     jdbc.update(
         "INSERT INTO outbox (pengajuan_id, payload) "
-            + "VALUES (?, jsonb_build_object('nomor', ?::text, 'pemasok', ?::text))",
-        p.id, p.nomor, p.pemasok);
+            + "VALUES (?, jsonb_build_object('nomor', ?::text, 'pemasok', ?::text, 'idKorelasi', ?::text))",
+        p.id, p.nomor, p.pemasok, MDC.get(IdKorelasiFilter.KUNCI));
 
     return PengajuanView.dari(p);
   }

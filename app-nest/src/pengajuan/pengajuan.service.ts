@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { DataSource } from 'typeorm';
+import { idKorelasiSekarang } from '../umum/konteks.js';
 import { Pengajuan } from './pengajuan.entity.js';
 import { PengajuanBaris } from './pengajuan-baris.entity.js';
 
@@ -53,7 +54,7 @@ export class PengajuanService {
 
       await manager.query(
         `INSERT INTO outbox (pengajuan_id, payload) VALUES ($1, $2)`,
-        [pengajuan.id, JSON.stringify({ nomor: dto.nomor, pemasok: dto.pemasok })],
+        [pengajuan.id, JSON.stringify({ nomor: dto.nomor, pemasok: dto.pemasok, idKorelasi: idKorelasiSekarang() })],
       );
 
       return pengajuan.id;

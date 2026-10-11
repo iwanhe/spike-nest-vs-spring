@@ -20,7 +20,7 @@ const KLAIM = `
                      LIMIT $2
                        FOR UPDATE SKIP LOCKED)
     RETURNING o.id, o.payload, o.percobaan)
-  SELECT id::text AS id, payload::text AS payload, percobaan FROM klaim`;
+  SELECT id::text AS id, payload::text AS payload, payload->>'idKorelasi' AS id_korelasi, percobaan FROM klaim`;
 
 @Injectable()
 export class OutboxPekerja implements OnApplicationBootstrap, OnApplicationShutdown {
@@ -61,10 +61,10 @@ export class OutboxPekerja implements OnApplicationBootstrap, OnApplicationShutd
   }
 
   private async putaran() {
-    const baris: { id: string; payload: string; percobaan: number }[] =
+    const baris: { id: string; payload: string; id_korelasi: string | null; percobaan: number }[] =
       await this.dataSource.query(KLAIM, [this.mundurMs, 10]);
     for (const b of baris) {
-      if (await this.kirim(b.id, b.payload)) {
+      if (await this.kirim(b.id, b.payload, b.id_korelasi)) {
         await this.dataSource.query(
           `UPDATE outbox SET status = 'TERKIRIM', terkirim_pada = now() WHERE id = $1`, [b.id]);
       } else if (b.percobaan >= this.maksPercobaan) {
@@ -73,11 +73,17 @@ export class OutboxPekerja implements OnApplicationBootstrap, OnApplicationShutd
     }
   }
 
-  private async kirim(id: string, payload: string): Promise<boolean> {
+  private async kirim(id: string, payload: string, idKorelasi: string | null): Promise<boolean> {
+    // ID korelasi dari permintaan asal ikut dicatat dan diteruskan ke ERP (S6).
+    this.log.log('kirim ke ERP', { idKorelasi, idOutbox: id });
     try {
       const res = await fetch(`${this.erpUrl}/erp/pengajuan`, {
         method: 'POST',
-        headers: { 'content-type': 'application/json', 'idempotency-key': id },
+        headers: {
+          'content-type': 'application/json',
+          'idempotency-key': id,
+          ...(idKorelasi ? { 'x-id-korelasi': idKorelasi } : {}),
+        },
         body: payload,
         signal: AbortSignal.timeout(this.batasMs),
       });

@@ -1,0 +1,5 @@
+node_modules
+src
+*.log
+app.pid
+ekspor-keluar

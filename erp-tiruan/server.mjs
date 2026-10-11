@@ -49,7 +49,11 @@ const server = createServer(async (req, res) => {
       if (tersimpan.has(kunci)) {                        // kiriman ulang: jangan catat dua kali
         return kirim(res, 200, { ...tersimpan.get(kunci), duplikat: true });
       }
-      const dokumen = { nomorErp: `ERP-${String(tersimpan.size + 1).padStart(6, '0')}`, kunci, isi: body };
+      // idKorelasi dicatat supaya uji S6 bisa membuktikan satu permintaan terlacak sampai ke ERP.
+      const dokumen = {
+        nomorErp: `ERP-${String(tersimpan.size + 1).padStart(6, '0')}`,
+        kunci, idKorelasi: req.headers['x-id-korelasi'] ?? null, isi: body,
+      };
       tersimpan.set(kunci, dokumen);
 
       if (mode === 'simpan-lalu-gagal') return kirim(res, 500, { pesan: 'Tersimpan, tetapi jawaban gagal dikirim' });

@@ -3,6 +3,9 @@ name: Spike NestJS vs Spring Boot
 on:
   push:
     branches: [main, spike]
+  # Setiap hari pukul 06.17 WIB (23.17 UTC). Jadwal hanya berlaku untuk file yang ada di branch utama.
+  schedule:
+    - cron: "17 23 * * *"
   workflow_dispatch:
 
 permissions:
@@ -66,10 +69,20 @@ jobs:
       OUTBOX_JEDA_MS: "250"
       OUTBOX_MUNDUR_MS: "500"
       APP_DIR: app-${{ matrix.kandidat }}
+      SEHAT_URL: ${{ matrix.kandidat == 'nest' && 'http://localhost:3000/sehat' || 'http://localhost:3000/actuator/health' }}
+      PENERBIT_TOKEN: http://localhost:8081/realms/spike
       JAVA_TOOL_OPTIONS: ${{ matrix.java_opts }}
 
     steps:
       - uses: actions/checkout@v4
+
+      # Dijalankan paling awal supaya sudah siap saat uji keamanan (S6) dimulai.
+      - name: Penyedia identitas (Keycloak) di latar
+        run: >
+          docker run -d --name idp -p 8081:8080
+          -e KC_BOOTSTRAP_ADMIN_USERNAME=admin -e KC_BOOTSTRAP_ADMIN_PASSWORD=admin_dev_only
+          -v "$PWD/idp/realm-spike.json:/opt/keycloak/data/import/realm-spike.json:ro"
+          quay.io/keycloak/keycloak:26.6.2 start-dev --import-realm
 
       - uses: actions/setup-node@v4
         with:
@@ -163,6 +176,55 @@ jobs:
         working-directory: ${{ env.APP_DIR }}
         run: KELUARAN=../ukur-beban.json ../skrip/beban.sh
 
+      - name: Ukur ekspor besar (S4)
+        working-directory: ${{ env.APP_DIR }}
+        run: |
+          KELUARAN=../ukur-ekspor-a.json ../skrip/ekspor.sh 100000
+          KELUARAN=../ukur-ekspor-b.json ../skrip/ekspor.sh 1000000
+
+      - name: Jalankan ulang dengan pemeriksaan token dan log JSON (S6)
+        working-directory: ${{ env.APP_DIR }}
+        env:
+          AUTH_ISSUER: ${{ env.PENERBIT_TOKEN }}
+          LOG_JSON: "1"
+          LOGGING_STRUCTURED_FORMAT_CONSOLE: ecs
+          TANPA_DIAM: "1"
+        run: |
+          siap=0
+          for _ in $(seq 1 180); do
+            if curl -sf "$AUTH_ISSUER/.well-known/openid-configuration" > /dev/null; then siap=1; break; fi
+            sleep 1
+          done
+          if [ "$siap" != 1 ]; then echo "Keycloak tidak siap"; docker logs idp 2>&1 | tail -40; exit 1; fi
+          pid=$(cat app.pid); kill "$pid"
+          for _ in $(seq 1 100); do kill -0 "$pid" 2>/dev/null || break; sleep 0.1; done
+          cp app.log app-tahap1.log
+          KELUARAN=/tmp/mulai-s6.json ../skrip/mulai.sh "$(cat ../perintah.txt)"
+
+      - name: Uji keamanan (S6)
+        working-directory: uji-penerimaan
+        env:
+          AUTH_ISSUER: ${{ env.PENERBIT_TOKEN }}
+        run: |
+          set +e
+          node --test --test-reporter=tap s6-keamanan.test.mjs 2>&1 | tee ../uji-s6.tap
+          set -e
+          lulus=$(grep -E '^# pass' ../uji-s6.tap | awk '{print $3}')
+          gagal=$(grep -E '^# fail' ../uji-s6.tap | awk '{print $3}')
+          echo "{\"uji_s6_lulus\": ${lulus:-0}, \"uji_s6_gagal\": ${gagal:-1}}" > ../ukur-uji-s6.json
+          grep -oE 'uji-[0-9a-f-]{36}' ../uji-s6.tap | head -1 > ../id-korelasi.txt || true
+          cat ../ukur-uji-s6.json
+
+      - name: Jejak log dan health check saat database mati (S6)
+        continue-on-error: true
+        working-directory: ${{ env.APP_DIR }}
+        run: ID_KORELASI="$(cat ../id-korelasi.txt)" KELUARAN=../ukur-s6.json ../skrip/s6-operasional.sh
+
+      - name: Image container (S6)
+        if: matrix.nama != 'spring-heap256'
+        continue-on-error: true
+        run: KELUARAN=ukur-wadah.json skrip/wadah.sh "${{ matrix.kandidat }}"
+
       - name: Rantai pasok (NestJS)
         if: matrix.kandidat == 'nest'
         working-directory: app-nest
@@ -197,8 +259,13 @@ jobs:
         run: |
           ls ukur-*.json 2>/dev/null || true
           jq -s --arg k "${{ matrix.nama }}" 'reduce .[] as $x ({kandidat: $k}; . * $x)' ukur-*.json > "hasil-${{ matrix.nama }}.json" || echo '{}' > "hasil-${{ matrix.nama }}.json"
-          jq -c . "hasil-${{ matrix.nama }}.json" | skrip/catat.sh "HASIL ${{ matrix.nama }}"
-          if [ -f uji.tap ]; then grep -E '^(ok|not ok|# (tests|pass|fail))|error:|expected:|actual:' uji.tap | skrip/catat.sh "UJI ${{ matrix.nama }}"; fi
+          # Anotasi dibagi dua supaya tidak terpotong: ukuran inti, lalu S4 dan S6.
+          pilih='with_entries(select(.key | test("^(ekspor_|s6_|wadah|uji_s6_)")))'
+          jq -c "with_entries(select(.key | test(\"^(ekspor_|s6_|wadah|uji_s6_)\") | not))" "hasil-${{ matrix.nama }}.json" | skrip/catat.sh "HASIL ${{ matrix.nama }}"
+          jq -c "$pilih" "hasil-${{ matrix.nama }}.json" | skrip/catat.sh "S4S6 ${{ matrix.nama }}"
+          saring='^\s*(ok|not ok)|^# (tests|pass|fail|skipped)|^\s*# (sha256|lama ekspor|ukuran)|error:|expected:|actual:'
+          if [ -f uji.tap ]; then grep -E "$saring" uji.tap | skrip/catat.sh "UJI ${{ matrix.nama }}"; fi
+          if [ -f uji-s6.tap ]; then grep -E "$saring" uji-s6.tap | skrip/catat.sh "UJIS6 ${{ matrix.nama }}"; fi
           {
             echo "## Hasil ${{ matrix.kandidat }}"
             echo '```json'
@@ -224,8 +291,16 @@ jobs:
           path: |
             hasil-${{ matrix.nama }}.json
             uji.tap
+            uji-s6.tap
             trivy-*.json
             trivy-daftar.txt
 
       - name: Gagal bila ada uji yang tidak lulus
-        run: test "$(jq -r .uji_gagal ukur-uji.json)" = "0"
+        run: |
+          jq -e '
+            .uji_gagal == 0 and .uji_s6_gagal == 0 and .uji_s6_lulus > 0
+            and .mati_paksa == "lulus" and .s5_mati_paksa == "lulus"
+            and .ekspor_100000.status == "SELESAI" and .ekspor_1000000.status == "SELESAI"
+            and .s6_operasional == "lulus"
+            and ((has("wadah") | not) or .wadah.hasil == "lulus")
+          ' "hasil-${{ matrix.nama }}.json"

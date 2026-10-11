@@ -1,9 +1,14 @@
 import { Module } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { WorkflowsModule, WorkflowStorage } from '@nestjs/workflows';
 import { fromTypeOrm, PostgresWorkflowStore } from '@nestjs/workflows/postgres';
 import { DataSource } from 'typeorm';
 import { OutboxPekerja } from './outbox/outbox.pekerja.js';
+import { EksporController } from './ekspor/ekspor.controller.js';
+import { EksporService } from './ekspor/ekspor.service.js';
+import { PenjagaToken } from './keamanan/penjaga-token.js';
+import { SehatController } from './sehat/sehat.controller.js';
 import { LaporanController } from './laporan/laporan.controller.js';
 import { PengajuanModule } from './pengajuan/pengajuan.module.js';
 import { PersetujuanController } from './persetujuan/persetujuan.controller.js';
@@ -20,7 +25,7 @@ import { PersetujuanWorkflow } from './persetujuan/persetujuan.workflow.js';
     WorkflowsModule.forRoot(),
     PengajuanModule,
   ],
-  controllers: [LaporanController, PersetujuanController],
+  controllers: [LaporanController, PersetujuanController, EksporController, SehatController],
   providers: [
     {
       // Proses persetujuan disimpan di PostgreSQL, di skema nest_workflows.
@@ -31,6 +36,9 @@ import { PersetujuanWorkflow } from './persetujuan/persetujuan.workflow.js';
     },
     PersetujuanWorkflow,
     OutboxPekerja,
+    EksporService,
+    // Penjaga token berlaku untuk semua alamat, kecuali yang ditandai @Terbuka().
+    { provide: APP_GUARD, useClass: PenjagaToken },
   ],
 })
 export class AppModule {}

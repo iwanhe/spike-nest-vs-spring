@@ -53,6 +53,17 @@
 			<artifactId>flowable-spring-boot-starter-process</artifactId>
 			<version>8.0.0</version>
 		</dependency>
+		<!-- S6: pemeriksaan token dari penyedia identitas (Keycloak). -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-security-oauth2-resource-server</artifactId>
+		</dependency>
+		<!-- S4: menulis file Excel besar tanpa menahan semua baris di memori. -->
+		<dependency>
+			<groupId>org.apache.poi</groupId>
+			<artifactId>poi-ooxml</artifactId>
+			<version>5.5.1</version>
+		</dependency>
 		<dependency>
 			<groupId>org.postgresql</groupId>
 			<artifactId>postgresql</artifactId>

@@ -29,10 +29,13 @@ services:
 
   idp:
     image: quay.io/keycloak/keycloak:26.6.2
-    command: start-dev
+    # Realm "spike", client "spike-api", serta pengguna budi dan sari diimpor otomatis saat pertama jalan.
+    command: start-dev --import-realm
     environment:
       KC_BOOTSTRAP_ADMIN_USERNAME: admin
       KC_BOOTSTRAP_ADMIN_PASSWORD: admin_dev_only
+    volumes:
+      - ./idp/realm-spike.json:/opt/keycloak/data/import/realm-spike.json:ro
     ports:
       - "8081:8080"
     profiles: ["idp"]
