@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # S7: pemindaian kerentanan dependency dengan Trivy, alat yang sama untuk kedua kandidat.
 # Pemakaian: skrip/pindai.sh nest|spring
+# Keluar dengan kode 1 bila gerbang gagal (lihat di bawah), sehingga build ikut gagal.
 # Versi Trivy dikunci. Jangan memakai tag "latest": pada Maret 2026 beberapa tag Trivy
 # sempat disusupi (CVE-2026-33634), jadi versi harus dipilih dengan sengaja.
 set -euo pipefail
@@ -12,7 +13,7 @@ mkdir -p "$HOME/.cache/trivy" "$HOME/.m2"
 pindai() { # $1 = nama berkas hasil, sisanya = argumen trivy
   local nama=$1; shift
   docker run --rm -v "$PWD:/kerja:ro" -v "$HOME/.cache/trivy:/root/.cache/trivy" -v "$HOME/.m2:/root/.m2:ro" \
-    "$TRIVY" "$@" --scanners vuln --list-all-pkgs --format json --quiet > "trivy-$nama.json" \
+    "$TRIVY" "$@" --scanners vuln --list-all-pkgs --ignorefile /kerja/.trivyignore --format json --quiet > "trivy-$nama.json" \
     || echo '{"galat": true}' > "trivy-$nama.json"
 }
 ringkas() { # jumlah paket yang dikenali dan jumlah kerentanan per tingkat
@@ -49,9 +50,16 @@ else
   unzip -Z1 app-spring/target/*.jar | grep -E 'lib/(tomcat-embed-core|jackson-core|jackson-databind|spring-boot|spring-core|flowable-engine)-[0-9]' | sed 's|.*/||' > versi-jar.txt
 fi
 
-jq -n --arg t "$TRIVY" --arg sj "$sumber_jalan" --arg ss "$sumber_semua" \
+# Gerbang build: temuan kritis atau tinggi pada paket yang ikut ke server, dan sudah punya versi perbaikan.
+# Temuan yang sengaja diterima dicatat di .trivyignore, lengkap dengan alasan dan tanggal kedaluwarsa.
+penahan=$(jq '[.Results[]?.Vulnerabilities[]?
+  | select((.Severity == "CRITICAL" or .Severity == "HIGH") and ((.FixedVersion // "") != ""))]
+  | unique_by([.VulnerabilityID, .PkgName, .InstalledVersion]) | length' trivy-jalan.json 2>/dev/null || echo -1)
+gerbang=lulus; [ "$penahan" = 0 ] || gerbang=gagal
+
+jq -n --arg t "$TRIVY" --arg sj "$sumber_jalan" --arg ss "$sumber_semua" --arg g "$gerbang" --argjson p "$penahan" \
   --argjson j "$(ringkas trivy-jalan.json)" --argjson s "$(ringkas trivy-semua.json)" \
-  '{trivy: {versi: $t, saat_berjalan: ($j + {sumber: $sj}), pembanding: (if $s then $s + {sumber: $ss} else null end)}}' > "$KELUARAN"
+  '{trivy: {versi: $t, gerbang: $g, penahan_gerbang: $p, saat_berjalan: ($j + {sumber: $sj}), pembanding: (if $s then $s + {sumber: $ss} else null end)}}' > "$KELUARAN"
 cat "$KELUARAN"
 {
   [ -f versi-jar.txt ] && { echo "== isi jar"; cat versi-jar.txt; }
@@ -59,3 +67,7 @@ cat "$KELUARAN"
   echo "== $sumber_jalan"; daftar trivy-jalan.json
   jq -c .trivy "$KELUARAN"
 } | tee trivy-daftar.txt
+if [ "$gerbang" != lulus ]; then
+  echo "GERBANG GAGAL: $penahan temuan kritis/tinggi pada paket saat berjalan sudah punya versi perbaikan."
+  exit 1
+fi

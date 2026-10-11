@@ -33,8 +33,14 @@ penyedia identitas uji yang dibuat lalu dibuang. Jangan dipakai di server.
 
 ## Varian yang dijalankan
 
-`nest`, `spring`, `spring-heap256` (heap JVM dibatasi 256 MB), serta `nest-tambal` dan `spring-tambal`
-(temuan pemindaian ditutup, lalu semua uji dijalankan ulang).
+`nest`, `spring`, dan `spring-heap256` (heap JVM dibatasi 256 MB).
+
+## Gerbang kerentanan
+
+Build gagal bila pemindaian menemukan kerentanan kritis atau tinggi pada paket yang ikut ke server
+dan versi perbaikannya sudah ada. Temuan yang sengaja diterima dicatat di `.trivyignore`, dengan alasan
+dan tanggal kedaluwarsa. Tambalan yang sedang berlaku: `tomcat.version` dan `jackson-bom.version`
+di `app-spring/pom.xml`.
 
 ## Jadwal dan cara membaca hasil
 
