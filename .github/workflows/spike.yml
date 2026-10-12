@@ -300,3 +300,48 @@ jobs:
             and ($perlu_wadah == "tidak" or .wadah.hasil == "lulus")
             and ($perlu_wadah == "tidak" or .trivy.gerbang == "lulus")
           ' --arg perlu_wadah "${{ matrix.nama == 'spring-heap256' && 'tidak' || 'ya' }}" "hasil-${{ matrix.nama }}.json"
+
+  # Setelah semua varian selesai: simpan riwayat, buat ulang grafik dan tabel di README, lalu commit ke main.
+  # Hanya untuk run terjadwal atau manual di main, supaya push biasa tidak mengisi riwayat.
+  # Commit oleh GITHUB_TOKEN tidak memicu alur ini lagi, jadi tidak ada putaran tanpa akhir.
+  laporan:
+    name: perbarui-readme
+    needs: uji
+    if: always() && github.ref == 'refs/heads/main' && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: hasil-*
+          path: unduhan
+          merge-multiple: true
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Perbarui riwayat, grafik, dan README
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          ls unduhan || true
+          # Waktu mulai run ini dipakai sebagai waktu entri riwayat.
+          export RUN_WAKTU="$(gh api "repos/${{ github.repository }}/actions/runs/${{ github.run_id }}" -q .run_started_at)"
+          node skrip/laporan.mjs unduhan
+
+      - name: Commit ke main
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add README.md hasil/
+          if git diff --cached --quiet; then echo "Tidak ada perubahan"; exit 0; fi
+          git commit -m "Hasil uji harian $(TZ=Asia/Jakarta date +%Y-%m-%d) [skip ci]"
+          for i in 1 2 3; do git pull --rebase -q origin main && git push -q origin HEAD:main && exit 0; sleep 5; done
+          exit 1
