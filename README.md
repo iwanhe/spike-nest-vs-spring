@@ -97,6 +97,12 @@ dan versi perbaikannya sudah ada. Temuan yang sengaja diterima dicatat di `.triv
 dan tanggal kedaluwarsa. Tambalan yang sedang berlaku: `tomcat.version` dan `jackson-bom.version`
 di `app-spring/pom.xml`.
 
+## Confluence
+
+Hasil yang sama juga ditulis ke halaman Confluence KCSI "Spike NestJS vs Spring Boot - Hasil Uji Harian"
+(space SD, di bawah "Pemilihan Backend: Spike NestJS vs Spring Boot"). Langkah ini butuh dua secret repo:
+`ATLASSIAN_EMAIL` dan `ATLASSIAN_API_TOKEN`. Tanpa keduanya langkah itu dilewati dan run tetap lulus.
+
 ## Jadwal dan cara membaca hasil
 
 Alur berjalan pada setiap push ke `main` atau `spike`, bisa dijalankan manual dari tab **Actions**, dan
