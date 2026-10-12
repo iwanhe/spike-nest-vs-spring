@@ -12,7 +12,7 @@ penyedia identitas uji yang dibuat lalu dibuang. Jangan dipakai di server.
 Bagian ini diperbarui otomatis oleh alur GitHub Actions setelah setiap run terjadwal (06.17 WIB) atau manual di branch `main`.
 Jangan diedit dengan tangan: perubahan akan tertimpa pada run berikutnya. Data mentahnya ada di [`hasil/riwayat.jsonl`](hasil/riwayat.jsonl).
 
-**Run terakhir:** 12 Okt 2026, 09.21 WIB, terjadwal, [run 38195470612](https://github.com/iwanhe/spike-nest-vs-spring/actions/runs/38195470612).
+**Run terakhir:** 12 Okt 2026, 19.09 WIB, manual, [run 38247216866](https://github.com/iwanhe/spike-nest-vs-spring/actions/runs/38247216866).
 
 | Ukuran | NestJS | Spring Boot | Spring Boot (heap 256 MB) |
 |---|---|---|---|
@@ -20,13 +20,13 @@ Jangan diedit dengan tangan: perubahan akan tertimpa pada run berikutnya. Data m
 | Uji penerimaan S1, S2, S4, S5 | 15 dari 15 | 15 dari 15 | 15 dari 15 |
 | Uji keamanan S6 | 5 dari 5 | 5 dari 5 | 5 dari 5 |
 | Mati paksa: persetujuan / pengiriman ERP | lulus / lulus | lulus / lulus | lulus / lulus |
-| Waktu sampai siap (detik) | 1 | 10,6 | 10,4 |
-| Memori saat diam (MB) | 140 | 466 | 399 |
-| Memori setelah beban (MB) | 352 | 563 | 534 |
-| Permintaan per detik, 10 koneksi | 1.646 | 3.221 | 4.254 |
-| Median waktu respons (ms) | 1,1 | 0,83 | 0,74 |
-| Laporan 1 juta baris (detik) | 1,7 | 1,8 | 1,4 |
-| Ekspor 1 juta baris (detik) | 13,2 | 14,3 | 15,3 |
+| Waktu sampai siap (detik) | 0,9 | 8,4 | 10,1 |
+| Memori saat diam (MB) | 143 | 457 | 386 |
+| Memori setelah beban (MB) | 352 | 760 | 517 |
+| Permintaan per detik, 10 koneksi | 1.753 | 5.869 | 3.117 |
+| Median waktu respons (ms) | 1,12 | 0,67 | 0,81 |
+| Laporan 1 juta baris (detik) | 1,6 | 1,1 | 1,7 |
+| Ekspor 1 juta baris (detik) | 12,5 | 11,7 | 14,6 |
 | Gerbang kerentanan | lulus | lulus | – |
 | Kerentanan paket saat berjalan (kritis / tinggi / sedang) | 0 / 0 / 1 | 0 / 0 / 0 | – |
 | Ukuran image (MB) | 299 | 415 | – |
@@ -34,7 +34,7 @@ Jangan diedit dengan tangan: perubahan akan tertimpa pada run berikutnya. Data m
 
 Varian heap 256 MB tidak dipindai kerentanannya dan tidak dibuatkan image; jarnya sama dengan varian Spring Boot.
 
-### Tren 4 run terakhir
+### Tren 5 run terakhir
 
 ![Memori saat diam](hasil/grafik-memori-terang.svg#gh-light-mode-only)
 ![Memori saat diam](hasil/grafik-memori-gelap.svg#gh-dark-mode-only)
@@ -48,10 +48,11 @@ Varian heap 256 MB tidak dipindai kerentanannya dan tidak dibuatkan image; jarny
 ![Ekspor 1 juta baris ke CSV dan Excel](hasil/grafik-ekspor-terang.svg#gh-light-mode-only)
 ![Ekspor 1 juta baris ke CSV dan Excel](hasil/grafik-ekspor-gelap.svg#gh-dark-mode-only)
 
-### Riwayat 4 run terakhir
+### Riwayat 5 run terakhir
 
 | Waktu | Pemicu | NestJS | Spring Boot | Memori diam (MB), NestJS / Spring | Siap (detik), NestJS / Spring | Kerentanan NestJS (k / t / s) | Kerentanan Spring Boot (k / t / s) |
 |---|---|---|---|---|---|---|---|
+| [12 Okt 2026, 19.09 WIB](https://github.com/iwanhe/spike-nest-vs-spring/actions/runs/38247216866) | manual | ✅ lulus | ✅ lulus | 143 / 457 | 0,9 / 8,4 | 0 / 0 / 1 | 0 / 0 / 0 |
 | [12 Okt 2026, 09.21 WIB](https://github.com/iwanhe/spike-nest-vs-spring/actions/runs/38195470612) | terjadwal | ✅ lulus | ✅ lulus | 140 / 466 | 1 / 10,6 | 0 / 0 / 1 | 0 / 0 / 0 |
 | [12 Okt 2026, 08.10 WIB](https://github.com/iwanhe/spike-nest-vs-spring/actions/runs/38190887551) | manual | ✅ lulus | ✅ lulus | 142 / 453 | 0,9 / 6,7 | 0 / 0 / 1 | 0 / 0 / 0 |
 | [11 Okt 2026, 15.22 WIB](https://github.com/iwanhe/spike-nest-vs-spring/actions/runs/38124555249) | push | ✅ lulus | ✅ lulus | 142 / 459 | 1,2 / 8,8 | 0 / 0 / 1 | 0 / 0 / 0 |
