@@ -336,6 +336,13 @@ jobs:
           export RUN_WAKTU="$(gh api "repos/${{ github.repository }}/actions/runs/${{ github.run_id }}" -q .run_started_at)"
           node skrip/laporan.mjs unduhan
 
+      # Confluence menampilkan grafik sebagai gambar dari repo; PNG lebih pasti tampil daripada SVG.
+      - name: Gambar PNG untuk Confluence
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq librsvg2-bin > /dev/null
+          for f in hasil/*-terang.svg; do rsvg-convert -z 2 "$f" -o "${f%.svg}.png"; done
+          ls -la hasil/*.png
+
       - name: Commit ke main
         run: |
           git config user.name "github-actions[bot]"
@@ -345,3 +352,16 @@ jobs:
           git commit -m "Hasil uji harian $(TZ=Asia/Jakarta date +%Y-%m-%d) [skip ci]"
           for i in 1 2 3; do git pull --rebase -q origin main && git push -q origin HEAD:main && exit 0; sleep 5; done
           exit 1
+
+      # Halaman "Spike NestJS vs Spring Boot - Hasil Uji Harian" di Confluence KCSI (space SD).
+      # Dilewati dengan pemberitahuan bila secret ATLASSIAN_EMAIL atau ATLASSIAN_API_TOKEN belum diisi.
+      # CONFLUENCE_BASE bawaan untuk API token ber-scope; untuk API token biasa isi variabel repo
+      # CONFLUENCE_BASE dengan https://kcsi.atlassian.net
+      - name: Perbarui halaman Confluence
+        continue-on-error: true
+        env:
+          ATLASSIAN_EMAIL: ${{ secrets.ATLASSIAN_EMAIL }}
+          ATLASSIAN_API_TOKEN: ${{ secrets.ATLASSIAN_API_TOKEN }}
+          CONFLUENCE_PAGE_ID: "1933336"
+          CONFLUENCE_BASE: ${{ vars.CONFLUENCE_BASE || 'https://api.atlassian.com/ex/confluence/8fc53de0-4f9a-4e32-b4f3-b4699fda7398' }}
+        run: node skrip/confluence.mjs
