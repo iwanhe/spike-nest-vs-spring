@@ -2,7 +2,7 @@
 <style>text{font-family:system-ui,-apple-system,"Segoe UI",sans-serif}.angka{font-variant-numeric:tabular-nums}</style>
 <rect x="0.5" y="0.5" width="759" height="299" rx="8" fill="#1a1a19" stroke="rgba(255,255,255,0.10)"/>
 <text x="20" y="28" font-size="15" font-weight="600" fill="#f0efec">Permintaan per detik, 10 koneksi</text>
-<text x="20" y="48" font-size="12" fill="#898781">permintaan per detik, makin tinggi makin baik · 13 run terakhir</text>
+<text x="20" y="48" font-size="12" fill="#898781">permintaan per detik, makin tinggi makin baik · 14 run terakhir</text>
 <text x="655" y="32" font-size="12" fill="#c3c2b7">Spring Boot</text>
 <line x1="633" y1="28" x2="649" y2="28" stroke="#d95926" stroke-width="2" stroke-linecap="round"/>
 <text x="571" y="32" font-size="12" fill="#c3c2b7">NestJS</text>
@@ -18,38 +18,41 @@
 <line x1="64" y1="72" x2="610" y2="72" stroke="#2c2c2a" stroke-width="1"/>
 <text class="angka" x="56" y="76" font-size="11" text-anchor="end" fill="#898781">8.000</text>
 <text x="64" y="284" font-size="11" text-anchor="middle" fill="#898781">11 Okt 11.24</text>
-<text x="200.5" y="284" font-size="11" text-anchor="middle" fill="#898781">12 Okt 09.21</text>
-<text x="337" y="284" font-size="11" text-anchor="middle" fill="#898781">13 Okt 10.31</text>
-<text x="473.5" y="284" font-size="11" text-anchor="middle" fill="#898781">16 Okt 08.18</text>
-<text x="610" y="284" font-size="11" text-anchor="middle" fill="#898781">19 Okt 08.13</text>
-<path d="M64.0,208.2 L109.5,220.2 L155.0,220.7 L200.5,221.3 L246.0,218.8 L291.5,205.1 L337.0,207.1 L382.5,208.2 L428.0,220.4 L473.5,220.2 L519.0,203.8 L564.5,221.8 L610.0,220.6" fill="none" stroke="#3987e5" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<text x="190" y="284" font-size="11" text-anchor="middle" fill="#898781">12 Okt 09.21</text>
+<text x="316" y="284" font-size="11" text-anchor="middle" fill="#898781">13 Okt 10.31</text>
+<text x="442" y="284" font-size="11" text-anchor="middle" fill="#898781">16 Okt 08.18</text>
+<text x="568" y="284" font-size="11" text-anchor="middle" fill="#898781">19 Okt 08.13</text>
+<text x="610" y="284" font-size="11" text-anchor="middle" fill="#898781">20 Okt 08.47</text>
+<path d="M64.0,208.2 L106.0,220.2 L148.0,220.7 L190.0,221.3 L232.0,218.8 L274.0,205.1 L316.0,207.1 L358.0,208.2 L400.0,220.4 L442.0,220.2 L484.0,203.8 L526.0,221.8 L568.0,220.6 L610.0,177.6" fill="none" stroke="#3987e5" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
 <circle cx="64.0" cy="208.2" r="4" fill="#3987e5" stroke="#1a1a19" stroke-width="2"/>
-<circle cx="109.5" cy="220.2" r="4" fill="#3987e5" stroke="#1a1a19" stroke-width="2"/>
-<circle cx="155.0" cy="220.7" r="4" fill="#3987e5" stroke="#1a1a19" stroke-width="2"/>
-<circle cx="200.5" cy="221.3" r="4" fill="#3987e5" stroke="#1a1a19" stroke-width="2"/>
-<circle cx="246.0" cy="218.8" r="4" fill="#3987e5" stroke="#1a1a19" stroke-width="2"/>
-<circle cx="291.5" cy="205.1" r="4" fill="#3987e5" stroke="#1a1a19" stroke-width="2"/>
-<circle cx="337.0" cy="207.1" r="4" fill="#3987e5" stroke="#1a1a19" stroke-width="2"/>
-<circle cx="382.5" cy="208.2" r="4" fill="#3987e5" stroke="#1a1a19" stroke-width="2"/>
-<circle cx="428.0" cy="220.4" r="4" fill="#3987e5" stroke="#1a1a19" stroke-width="2"/>
-<circle cx="473.5" cy="220.2" r="4" fill="#3987e5" stroke="#1a1a19" stroke-width="2"/>
-<circle cx="519.0" cy="203.8" r="4" fill="#3987e5" stroke="#1a1a19" stroke-width="2"/>
-<circle cx="564.5" cy="221.8" r="4" fill="#3987e5" stroke="#1a1a19" stroke-width="2"/>
-<circle cx="610.0" cy="220.6" r="4" fill="#3987e5" stroke="#1a1a19" stroke-width="2"/>
-<path d="M64.0,185.7 L109.5,142.9 L155.0,79.6 L200.5,184.3 L246.0,122.1 L291.5,147.1 L337.0,184.7 L382.5,183.4 L428.0,131.3 L473.5,160.0 L519.0,180.8 L564.5,102.0 L610.0,188.6" fill="none" stroke="#d95926" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="106.0" cy="220.2" r="4" fill="#3987e5" stroke="#1a1a19" stroke-width="2"/>
+<circle cx="148.0" cy="220.7" r="4" fill="#3987e5" stroke="#1a1a19" stroke-width="2"/>
+<circle cx="190.0" cy="221.3" r="4" fill="#3987e5" stroke="#1a1a19" stroke-width="2"/>
+<circle cx="232.0" cy="218.8" r="4" fill="#3987e5" stroke="#1a1a19" stroke-width="2"/>
+<circle cx="274.0" cy="205.1" r="4" fill="#3987e5" stroke="#1a1a19" stroke-width="2"/>
+<circle cx="316.0" cy="207.1" r="4" fill="#3987e5" stroke="#1a1a19" stroke-width="2"/>
+<circle cx="358.0" cy="208.2" r="4" fill="#3987e5" stroke="#1a1a19" stroke-width="2"/>
+<circle cx="400.0" cy="220.4" r="4" fill="#3987e5" stroke="#1a1a19" stroke-width="2"/>
+<circle cx="442.0" cy="220.2" r="4" fill="#3987e5" stroke="#1a1a19" stroke-width="2"/>
+<circle cx="484.0" cy="203.8" r="4" fill="#3987e5" stroke="#1a1a19" stroke-width="2"/>
+<circle cx="526.0" cy="221.8" r="4" fill="#3987e5" stroke="#1a1a19" stroke-width="2"/>
+<circle cx="568.0" cy="220.6" r="4" fill="#3987e5" stroke="#1a1a19" stroke-width="2"/>
+<circle cx="610.0" cy="177.6" r="4" fill="#3987e5" stroke="#1a1a19" stroke-width="2"/>
+<path d="M64.0,185.7 L106.0,142.9 L148.0,79.6 L190.0,184.3 L232.0,122.1 L274.0,147.1 L316.0,184.7 L358.0,183.4 L400.0,131.3 L442.0,160.0 L484.0,180.8 L526.0,102.0 L568.0,188.6 L610.0,195.7" fill="none" stroke="#d95926" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
 <circle cx="64.0" cy="185.7" r="4" fill="#d95926" stroke="#1a1a19" stroke-width="2"/>
-<circle cx="109.5" cy="142.9" r="4" fill="#d95926" stroke="#1a1a19" stroke-width="2"/>
-<circle cx="155.0" cy="79.6" r="4" fill="#d95926" stroke="#1a1a19" stroke-width="2"/>
-<circle cx="200.5" cy="184.3" r="4" fill="#d95926" stroke="#1a1a19" stroke-width="2"/>
-<circle cx="246.0" cy="122.1" r="4" fill="#d95926" stroke="#1a1a19" stroke-width="2"/>
-<circle cx="291.5" cy="147.1" r="4" fill="#d95926" stroke="#1a1a19" stroke-width="2"/>
-<circle cx="337.0" cy="184.7" r="4" fill="#d95926" stroke="#1a1a19" stroke-width="2"/>
-<circle cx="382.5" cy="183.4" r="4" fill="#d95926" stroke="#1a1a19" stroke-width="2"/>
-<circle cx="428.0" cy="131.3" r="4" fill="#d95926" stroke="#1a1a19" stroke-width="2"/>
-<circle cx="473.5" cy="160.0" r="4" fill="#d95926" stroke="#1a1a19" stroke-width="2"/>
-<circle cx="519.0" cy="180.8" r="4" fill="#d95926" stroke="#1a1a19" stroke-width="2"/>
-<circle cx="564.5" cy="102.0" r="4" fill="#d95926" stroke="#1a1a19" stroke-width="2"/>
-<circle cx="610.0" cy="188.6" r="4" fill="#d95926" stroke="#1a1a19" stroke-width="2"/>
-<text class="angka" x="624" y="192.607" font-size="12" fill="#c3c2b7">Spring Boot: <tspan fill="#f0efec" font-weight="600">3.038</tspan></text>
-<text class="angka" x="624" y="224.5905" font-size="12" fill="#c3c2b7">NestJS: <tspan fill="#f0efec" font-weight="600">1.677</tspan></text>
+<circle cx="106.0" cy="142.9" r="4" fill="#d95926" stroke="#1a1a19" stroke-width="2"/>
+<circle cx="148.0" cy="79.6" r="4" fill="#d95926" stroke="#1a1a19" stroke-width="2"/>
+<circle cx="190.0" cy="184.3" r="4" fill="#d95926" stroke="#1a1a19" stroke-width="2"/>
+<circle cx="232.0" cy="122.1" r="4" fill="#d95926" stroke="#1a1a19" stroke-width="2"/>
+<circle cx="274.0" cy="147.1" r="4" fill="#d95926" stroke="#1a1a19" stroke-width="2"/>
+<circle cx="316.0" cy="184.7" r="4" fill="#d95926" stroke="#1a1a19" stroke-width="2"/>
+<circle cx="358.0" cy="183.4" r="4" fill="#d95926" stroke="#1a1a19" stroke-width="2"/>
+<circle cx="400.0" cy="131.3" r="4" fill="#d95926" stroke="#1a1a19" stroke-width="2"/>
+<circle cx="442.0" cy="160.0" r="4" fill="#d95926" stroke="#1a1a19" stroke-width="2"/>
+<circle cx="484.0" cy="180.8" r="4" fill="#d95926" stroke="#1a1a19" stroke-width="2"/>
+<circle cx="526.0" cy="102.0" r="4" fill="#d95926" stroke="#1a1a19" stroke-width="2"/>
+<circle cx="568.0" cy="188.6" r="4" fill="#d95926" stroke="#1a1a19" stroke-width="2"/>
+<circle cx="610.0" cy="195.7" r="4" fill="#d95926" stroke="#1a1a19" stroke-width="2"/>
+<text class="angka" x="624" y="181.5855" font-size="12" fill="#c3c2b7">NestJS: <tspan fill="#f0efec" font-weight="600">3.507</tspan></text>
+<text class="angka" x="624" y="199.704" font-size="12" fill="#c3c2b7">Spring Boot: <tspan fill="#f0efec" font-weight="600">2.736</tspan></text>
 </svg>
