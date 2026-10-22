@@ -2,7 +2,7 @@
 <style>text{font-family:system-ui,-apple-system,"Segoe UI",sans-serif}.angka{font-variant-numeric:tabular-nums}</style>
 <rect x="0.5" y="0.5" width="759" height="299" rx="8" fill="#1a1a19" stroke="rgba(255,255,255,0.10)"/>
 <text x="20" y="28" font-size="15" font-weight="600" fill="#f0efec">Permintaan per detik, 10 koneksi</text>
-<text x="20" y="48" font-size="12" fill="#898781">permintaan per detik, makin tinggi makin baik · 15 run terakhir</text>
+<text x="20" y="48" font-size="12" fill="#898781">permintaan per detik, makin tinggi makin baik · 16 run terakhir</text>
 <text x="655" y="32" font-size="12" fill="#c3c2b7">Spring Boot</text>
 <line x1="633" y1="28" x2="649" y2="28" stroke="#d95926" stroke-width="2" stroke-linecap="round"/>
 <text x="571" y="32" font-size="12" fill="#c3c2b7">NestJS</text>
@@ -18,43 +18,46 @@
 <line x1="64" y1="72" x2="610" y2="72" stroke="#2c2c2a" stroke-width="1"/>
 <text class="angka" x="56" y="76" font-size="11" text-anchor="end" fill="#898781">8.000</text>
 <text x="64" y="284" font-size="11" text-anchor="middle" fill="#898781">11 Okt 11.24</text>
-<text x="181" y="284" font-size="11" text-anchor="middle" fill="#898781">12 Okt 09.21</text>
-<text x="298" y="284" font-size="11" text-anchor="middle" fill="#898781">13 Okt 10.31</text>
-<text x="415" y="284" font-size="11" text-anchor="middle" fill="#898781">16 Okt 08.18</text>
-<text x="532" y="284" font-size="11" text-anchor="middle" fill="#898781">19 Okt 08.13</text>
-<text x="610" y="284" font-size="11" text-anchor="middle" fill="#898781">21 Okt 08.32</text>
-<path d="M64.0,208.2 L103.0,220.2 L142.0,220.7 L181.0,221.3 L220.0,218.8 L259.0,205.1 L298.0,207.1 L337.0,208.2 L376.0,220.4 L415.0,220.2 L454.0,203.8 L493.0,221.8 L532.0,220.6 L571.0,177.6 L610.0,220.8" fill="none" stroke="#3987e5" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<text x="173.2" y="284" font-size="11" text-anchor="middle" fill="#898781">12 Okt 09.21</text>
+<text x="282.4" y="284" font-size="11" text-anchor="middle" fill="#898781">13 Okt 10.31</text>
+<text x="391.6" y="284" font-size="11" text-anchor="middle" fill="#898781">16 Okt 08.18</text>
+<text x="500.8" y="284" font-size="11" text-anchor="middle" fill="#898781">19 Okt 08.13</text>
+<text x="610" y="284" font-size="11" text-anchor="middle" fill="#898781">22 Okt 08.28</text>
+<path d="M64.0,208.2 L100.4,220.2 L136.8,220.7 L173.2,221.3 L209.6,218.8 L246.0,205.1 L282.4,207.1 L318.8,208.2 L355.2,220.4 L391.6,220.2 L428.0,203.8 L464.4,221.8 L500.8,220.6 L537.2,177.6 L573.6,220.8 L610.0,177.1" fill="none" stroke="#3987e5" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
 <circle cx="64.0" cy="208.2" r="4" fill="#3987e5" stroke="#1a1a19" stroke-width="2"/>
-<circle cx="103.0" cy="220.2" r="4" fill="#3987e5" stroke="#1a1a19" stroke-width="2"/>
-<circle cx="142.0" cy="220.7" r="4" fill="#3987e5" stroke="#1a1a19" stroke-width="2"/>
-<circle cx="181.0" cy="221.3" r="4" fill="#3987e5" stroke="#1a1a19" stroke-width="2"/>
-<circle cx="220.0" cy="218.8" r="4" fill="#3987e5" stroke="#1a1a19" stroke-width="2"/>
-<circle cx="259.0" cy="205.1" r="4" fill="#3987e5" stroke="#1a1a19" stroke-width="2"/>
-<circle cx="298.0" cy="207.1" r="4" fill="#3987e5" stroke="#1a1a19" stroke-width="2"/>
-<circle cx="337.0" cy="208.2" r="4" fill="#3987e5" stroke="#1a1a19" stroke-width="2"/>
-<circle cx="376.0" cy="220.4" r="4" fill="#3987e5" stroke="#1a1a19" stroke-width="2"/>
-<circle cx="415.0" cy="220.2" r="4" fill="#3987e5" stroke="#1a1a19" stroke-width="2"/>
-<circle cx="454.0" cy="203.8" r="4" fill="#3987e5" stroke="#1a1a19" stroke-width="2"/>
-<circle cx="493.0" cy="221.8" r="4" fill="#3987e5" stroke="#1a1a19" stroke-width="2"/>
-<circle cx="532.0" cy="220.6" r="4" fill="#3987e5" stroke="#1a1a19" stroke-width="2"/>
-<circle cx="571.0" cy="177.6" r="4" fill="#3987e5" stroke="#1a1a19" stroke-width="2"/>
-<circle cx="610.0" cy="220.8" r="4" fill="#3987e5" stroke="#1a1a19" stroke-width="2"/>
-<path d="M64.0,185.7 L103.0,142.9 L142.0,79.6 L181.0,184.3 L220.0,122.1 L259.0,147.1 L298.0,184.7 L337.0,183.4 L376.0,131.3 L415.0,160.0 L454.0,180.8 L493.0,102.0 L532.0,188.6 L571.0,195.7 L610.0,175.0" fill="none" stroke="#d95926" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="100.4" cy="220.2" r="4" fill="#3987e5" stroke="#1a1a19" stroke-width="2"/>
+<circle cx="136.8" cy="220.7" r="4" fill="#3987e5" stroke="#1a1a19" stroke-width="2"/>
+<circle cx="173.2" cy="221.3" r="4" fill="#3987e5" stroke="#1a1a19" stroke-width="2"/>
+<circle cx="209.6" cy="218.8" r="4" fill="#3987e5" stroke="#1a1a19" stroke-width="2"/>
+<circle cx="246.0" cy="205.1" r="4" fill="#3987e5" stroke="#1a1a19" stroke-width="2"/>
+<circle cx="282.4" cy="207.1" r="4" fill="#3987e5" stroke="#1a1a19" stroke-width="2"/>
+<circle cx="318.8" cy="208.2" r="4" fill="#3987e5" stroke="#1a1a19" stroke-width="2"/>
+<circle cx="355.2" cy="220.4" r="4" fill="#3987e5" stroke="#1a1a19" stroke-width="2"/>
+<circle cx="391.6" cy="220.2" r="4" fill="#3987e5" stroke="#1a1a19" stroke-width="2"/>
+<circle cx="428.0" cy="203.8" r="4" fill="#3987e5" stroke="#1a1a19" stroke-width="2"/>
+<circle cx="464.4" cy="221.8" r="4" fill="#3987e5" stroke="#1a1a19" stroke-width="2"/>
+<circle cx="500.8" cy="220.6" r="4" fill="#3987e5" stroke="#1a1a19" stroke-width="2"/>
+<circle cx="537.2" cy="177.6" r="4" fill="#3987e5" stroke="#1a1a19" stroke-width="2"/>
+<circle cx="573.6" cy="220.8" r="4" fill="#3987e5" stroke="#1a1a19" stroke-width="2"/>
+<circle cx="610.0" cy="177.1" r="4" fill="#3987e5" stroke="#1a1a19" stroke-width="2"/>
+<path d="M64.0,185.7 L100.4,142.9 L136.8,79.6 L173.2,184.3 L209.6,122.1 L246.0,147.1 L282.4,184.7 L318.8,183.4 L355.2,131.3 L391.6,160.0 L428.0,180.8 L464.4,102.0 L500.8,188.6 L537.2,195.7 L573.6,175.0 L610.0,190.4" fill="none" stroke="#d95926" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
 <circle cx="64.0" cy="185.7" r="4" fill="#d95926" stroke="#1a1a19" stroke-width="2"/>
-<circle cx="103.0" cy="142.9" r="4" fill="#d95926" stroke="#1a1a19" stroke-width="2"/>
-<circle cx="142.0" cy="79.6" r="4" fill="#d95926" stroke="#1a1a19" stroke-width="2"/>
-<circle cx="181.0" cy="184.3" r="4" fill="#d95926" stroke="#1a1a19" stroke-width="2"/>
-<circle cx="220.0" cy="122.1" r="4" fill="#d95926" stroke="#1a1a19" stroke-width="2"/>
-<circle cx="259.0" cy="147.1" r="4" fill="#d95926" stroke="#1a1a19" stroke-width="2"/>
-<circle cx="298.0" cy="184.7" r="4" fill="#d95926" stroke="#1a1a19" stroke-width="2"/>
-<circle cx="337.0" cy="183.4" r="4" fill="#d95926" stroke="#1a1a19" stroke-width="2"/>
-<circle cx="376.0" cy="131.3" r="4" fill="#d95926" stroke="#1a1a19" stroke-width="2"/>
-<circle cx="415.0" cy="160.0" r="4" fill="#d95926" stroke="#1a1a19" stroke-width="2"/>
-<circle cx="454.0" cy="180.8" r="4" fill="#d95926" stroke="#1a1a19" stroke-width="2"/>
-<circle cx="493.0" cy="102.0" r="4" fill="#d95926" stroke="#1a1a19" stroke-width="2"/>
-<circle cx="532.0" cy="188.6" r="4" fill="#d95926" stroke="#1a1a19" stroke-width="2"/>
-<circle cx="571.0" cy="195.7" r="4" fill="#d95926" stroke="#1a1a19" stroke-width="2"/>
-<circle cx="610.0" cy="175.0" r="4" fill="#d95926" stroke="#1a1a19" stroke-width="2"/>
-<text class="angka" x="624" y="179.0475" font-size="12" fill="#c3c2b7">Spring Boot: <tspan fill="#f0efec" font-weight="600">3.615</tspan></text>
-<text class="angka" x="624" y="224.755" font-size="12" fill="#c3c2b7">NestJS: <tspan fill="#f0efec" font-weight="600">1.670</tspan></text>
+<circle cx="100.4" cy="142.9" r="4" fill="#d95926" stroke="#1a1a19" stroke-width="2"/>
+<circle cx="136.8" cy="79.6" r="4" fill="#d95926" stroke="#1a1a19" stroke-width="2"/>
+<circle cx="173.2" cy="184.3" r="4" fill="#d95926" stroke="#1a1a19" stroke-width="2"/>
+<circle cx="209.6" cy="122.1" r="4" fill="#d95926" stroke="#1a1a19" stroke-width="2"/>
+<circle cx="246.0" cy="147.1" r="4" fill="#d95926" stroke="#1a1a19" stroke-width="2"/>
+<circle cx="282.4" cy="184.7" r="4" fill="#d95926" stroke="#1a1a19" stroke-width="2"/>
+<circle cx="318.8" cy="183.4" r="4" fill="#d95926" stroke="#1a1a19" stroke-width="2"/>
+<circle cx="355.2" cy="131.3" r="4" fill="#d95926" stroke="#1a1a19" stroke-width="2"/>
+<circle cx="391.6" cy="160.0" r="4" fill="#d95926" stroke="#1a1a19" stroke-width="2"/>
+<circle cx="428.0" cy="180.8" r="4" fill="#d95926" stroke="#1a1a19" stroke-width="2"/>
+<circle cx="464.4" cy="102.0" r="4" fill="#d95926" stroke="#1a1a19" stroke-width="2"/>
+<circle cx="500.8" cy="188.6" r="4" fill="#d95926" stroke="#1a1a19" stroke-width="2"/>
+<circle cx="537.2" cy="195.7" r="4" fill="#d95926" stroke="#1a1a19" stroke-width="2"/>
+<circle cx="573.6" cy="175.0" r="4" fill="#d95926" stroke="#1a1a19" stroke-width="2"/>
+<circle cx="610.0" cy="190.4" r="4" fill="#d95926" stroke="#1a1a19" stroke-width="2"/>
+<text class="angka" x="624" y="181.1155" font-size="12" fill="#c3c2b7">NestJS: <tspan fill="#f0efec" font-weight="600">3.527</tspan></text>
+<line x1="616" y1="190.36950000000002" x2="620" y2="189.1155" stroke="#898781" stroke-width="1"/>
+<text class="angka" x="624" y="197.1155" font-size="12" fill="#c3c2b7">Spring Boot: <tspan fill="#f0efec" font-weight="600">2.963</tspan></text>
 </svg>
