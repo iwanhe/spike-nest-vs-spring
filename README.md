@@ -99,8 +99,15 @@ Angka kinerja berasal dari mesin CI yang dipakai bersama; satu kandidat bisa ber
 
 Build gagal bila pemindaian menemukan kerentanan kritis atau tinggi pada paket yang ikut ke server
 dan versi perbaikannya sudah ada. Temuan yang sengaja diterima dicatat di `.trivyignore`, dengan alasan
-dan tanggal kedaluwarsa. Tambalan yang sedang berlaku: `tomcat.version` dan `jackson-bom.version`
-di `app-spring/pom.xml`.
+dan tanggal kedaluwarsa. Tambalan yang sedang berlaku:
+
+- `tomcat.version` dan `jackson-bom.version` di `app-spring/pom.xml` (sejak 11 Oktober 2026).
+- `overrides.multer` 2.5.0 di `app-nest/package.json` (sejak 25 Oktober 2026, CVE-2026-113872).
+  `@nestjs/platform-express` 12.2.0 masih mengunci multer 2.4.0, jadi versi perbaikan hanya bisa
+  dipaksa lewat `overrides`. Cabut setelah rilis NestJS memakai multer 2.5.0 atau lebih baru.
+
+Tambalan lewat lockfile tanpa override: body-parser 2.3.0 ke 2.4.0 (CVE-2026-111181), karena
+express 5.2.1 meminta `^2.3.0`.
 
 ## Confluence
 
