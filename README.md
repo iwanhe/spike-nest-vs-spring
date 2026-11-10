@@ -12,7 +12,7 @@ penyedia identitas uji yang dibuat lalu dibuang. Jangan dipakai di server.
 Bagian ini diperbarui otomatis oleh alur GitHub Actions setelah setiap run terjadwal (06.17 WIB) atau manual di branch `main`.
 Jangan diedit dengan tangan: perubahan akan tertimpa pada run berikutnya. Data mentahnya ada di [`hasil/riwayat.jsonl`](hasil/riwayat.jsonl).
 
-**Run terakhir:** 9 Nov 2026, 09.38 WIB, terjadwal, [run 42552050066](https://github.com/iwanhe/spike-nest-vs-spring/actions/runs/42552050066).
+**Run terakhir:** 10 Nov 2026, 11.36 WIB, terjadwal, [run 42756952311](https://github.com/iwanhe/spike-nest-vs-spring/actions/runs/42756952311).
 
 | Ukuran | NestJS | Spring Boot | Spring Boot (heap 256 MB) |
 |---|---|---|---|
@@ -20,17 +20,17 @@ Jangan diedit dengan tangan: perubahan akan tertimpa pada run berikutnya. Data m
 | Uji penerimaan S1, S2, S4, S5 | 15 dari 15 | 15 dari 15 | 15 dari 15 |
 | Uji keamanan S6 | 5 dari 5 | 5 dari 5 | 5 dari 5 |
 | Mati paksa: persetujuan / pengiriman ERP | lulus / lulus | lulus / lulus | lulus / lulus |
-| Waktu sampai siap (detik) | 0,8 | 9,6 | 12,8 |
-| Memori saat diam (MB) | 140 | 466 | 396 |
-| Memori setelah beban (MB) | 353 | 685 | 492 |
-| Permintaan per detik, 10 koneksi | 2.313 | 5.102 | 3.152 |
-| Median waktu respons (ms) | 0,85 | 0,61 | 0,83 |
-| Laporan 1 juta baris (detik) | 1,3 | 1,3 | 1,8 |
-| Ekspor 1 juta baris (detik) | 9,7 | 12,6 | 15,7 |
+| Waktu sampai siap (detik) | 0,6 | 8,4 | 11,8 |
+| Memori saat diam (MB) | 144 | 445 | 391 |
+| Memori setelah beban (MB) | 344 | 637 | 511 |
+| Permintaan per detik, 10 koneksi | 3.239 | 5.067 | 3.222 |
+| Median waktu respons (ms) | 0,8 | 0,59 | 0,87 |
+| Laporan 1 juta baris (detik) | 1 | 1,3 | 1,8 |
+| Ekspor 1 juta baris (detik) | 7,4 | 12,8 | 15,7 |
 | Gerbang kerentanan | lulus | lulus | – |
 | Kerentanan paket saat berjalan (kritis / tinggi / sedang) | 0 / 0 / 1 | 0 / 0 / 1 | – |
 | Ukuran image (MB) | 300 | 408 | – |
-| Kerentanan OS di image (kritis / tinggi) | 1 / 34 dari 215 | 0 / 2 dari 59 | – |
+| Kerentanan OS di image (kritis / tinggi) | 1 / 34 dari 215 | 0 / 2 dari 44 | – |
 
 Varian heap 256 MB tidak dipindai kerentanannya dan tidak dibuatkan image; jarnya sama dengan varian Spring Boot.
 
@@ -52,6 +52,7 @@ Varian heap 256 MB tidak dipindai kerentanannya dan tidak dibuatkan image; jarny
 
 | Waktu | Pemicu | NestJS | Spring Boot | Memori diam (MB), NestJS / Spring | Siap (detik), NestJS / Spring | Kerentanan NestJS (k / t / s) | Kerentanan Spring Boot (k / t / s) |
 |---|---|---|---|---|---|---|---|
+| [10 Nov 2026, 11.36 WIB](https://github.com/iwanhe/spike-nest-vs-spring/actions/runs/42756952311) | terjadwal | ✅ lulus | ✅ lulus | 144 / 445 | 0,6 / 8,4 | 0 / 0 / 1 | 0 / 0 / 1 |
 | [9 Nov 2026, 09.38 WIB](https://github.com/iwanhe/spike-nest-vs-spring/actions/runs/42552050066) | terjadwal | ✅ lulus | ✅ lulus | 140 / 466 | 0,8 / 9,6 | 0 / 0 / 1 | 0 / 0 / 1 |
 | [8 Nov 2026, 09.25 WIB](https://github.com/iwanhe/spike-nest-vs-spring/actions/runs/42438508459) | terjadwal | ✅ lulus | ✅ lulus | 139 / 460 | 0,6 / 8,9 | 0 / 0 / 1 | 0 / 0 / 1 |
 | [7 Nov 2026, 09.45 WIB](https://github.com/iwanhe/spike-nest-vs-spring/actions/runs/42330828862) | terjadwal | ✅ lulus | ✅ lulus | 142 / 443 | 1 / 8,2 | 0 / 0 / 1 | 0 / 0 / 1 |
@@ -61,7 +62,6 @@ Varian heap 256 MB tidak dipindai kerentanannya dan tidak dibuatkan image; jarny
 | [3 Nov 2026, 10.55 WIB](https://github.com/iwanhe/spike-nest-vs-spring/actions/runs/41575047716) | terjadwal | ✅ lulus | ✅ lulus | 144 / 455 | 1 / 10,8 | 0 / 0 / 3 | 0 / 0 / 1 |
 | [2 Nov 2026, 09.28 WIB](https://github.com/iwanhe/spike-nest-vs-spring/actions/runs/41377909760) | terjadwal | ✅ lulus | ✅ lulus | 144 / 461 | 0,9 / 11,3 | 0 / 0 / 3 | 0 / 0 / 1 |
 | [1 Nov 2026, 09.10 WIB](https://github.com/iwanhe/spike-nest-vs-spring/actions/runs/41264093079) | terjadwal | ✅ lulus | ✅ lulus | 144 / 453 | 0,8 / 11,1 | 0 / 0 / 3 | 0 / 0 / 1 |
-| [31 Okt 2026, 09.20 WIB](https://github.com/iwanhe/spike-nest-vs-spring/actions/runs/41159520052) | terjadwal | ✅ lulus | ✅ lulus | 139 / 449 | 0,9 / 6,9 | 0 / 0 / 3 | 0 / 0 / 1 |
 
 Angka kinerja berasal dari mesin CI yang dipakai bersama; satu kandidat bisa berbeda dua kali lipat antar-run. Baca trennya, bukan satu titik.
 <!-- HASIL-HARIAN:SELESAI -->
