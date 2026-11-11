@@ -53,7 +53,20 @@ function ringkas(h) {
       : null,
     image_mb: angka(h.wadah?.ukuran_mb),
     rentan_os: h.wadah?.kerentanan_os
-      ? { kritis: h.wadah.kerentanan_os.kritis, tinggi: h.wadah.kerentanan_os.tinggi, total: h.wadah.kerentanan_os.total }
+      ? {
+          kritis: h.wadah.kerentanan_os.kritis, tinggi: h.wadah.kerentanan_os.tinggi, total: h.wadah.kerentanan_os.total,
+          // Sejak 11 November 2026: gerbang OS mode peringatan, tidak ikut menentukan "lulus".
+          gerbang: h.wadah.kerentanan_os.gerbang ?? null, penahan: angka(h.wadah.kerentanan_os.penahan_gerbang),
+        }
+      : null,
+    // Sejak 11 November 2026: mesin runner dan digest base image, untuk membaca selisih kinerja antar-run.
+    lingkungan: h.lingkungan
+      ? {
+          cpu: h.lingkungan.cpu ?? null, inti: angka(h.lingkungan.inti), ram_mb: angka(h.lingkungan.ram_mb),
+          runner: h.lingkungan.runner ?? null, postgres: h.lingkungan.postgres ?? null,
+          node: h.lingkungan.node ?? null, java: h.lingkungan.java ?? null,
+          base_image: Array.isArray(h.lingkungan.base_image) ? h.lingkungan.base_image : null,
+        }
       : null,
   };
   r.lulus =
@@ -222,6 +235,8 @@ const namaPemicu = { schedule: 'terjadwal', workflow_dispatch: 'manual', push: '
 const status = (r) => (!r ? 'tidak ada data' : r.lulus ? '✅ lulus' : '❌ gagal');
 const rentan = (x) => (!x ? '–' : `${x.kritis} / ${x.tinggi} / ${x.sedang}`);
 const rentanOs = (x) => (!x ? '–' : `${x.kritis} / ${x.tinggi} dari ${fmt(x.total)}`);
+const gerbangOs = (x) => (!x?.gerbang ? '–' : x.penahan ? `${x.gerbang} (${x.penahan} temuan sudah ada perbaikan)` : x.gerbang);
+const mesin = (l) => (!l ? '–' : `${l.inti ?? '?'} inti, ${l.ram_mb ? fmt(l.ram_mb / 1024) + ' GB' : '?'}, ${l.cpu ?? '?'}`);
 const uji = (l, g) => (l === null ? '–' : `${l} dari ${l + (g ?? 0)}`);
 
 const baris = [
@@ -240,6 +255,8 @@ const baris = [
   ['Kerentanan paket saat berjalan (kritis / tinggi / sedang)', (r) => rentan(r.rentan)],
   ['Ukuran image (MB)', (r) => fmt(r.image_mb)],
   ['Kerentanan OS di image (kritis / tinggi)', (r) => rentanOs(r.rentan_os)],
+  ['Gerbang OS image (mode peringatan)', (r) => gerbangOs(r.rentan_os)],
+  ['Mesin CI', (r) => mesin(r.lingkungan)],
 ];
 
 const md = [];

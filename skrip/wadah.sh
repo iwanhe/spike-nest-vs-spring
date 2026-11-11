@@ -28,16 +28,39 @@ done
 docker rm -f uji-wadah > /dev/null
 
 # Pemindaian image: paket sistem operasi di dalam image, yang tidak terlihat oleh pemindaian dependency.
+# Pengecualian di .trivyignore berlaku juga di sini, sama seperti pemindaian dependency (skrip/pindai.sh).
 mkdir -p "$HOME/.cache/trivy"
 docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "$HOME/.cache/trivy:/root/.cache/trivy" \
-  "$TRIVY" image --scanners vuln --pkg-types os --format json --quiet "$IMAGE" > trivy-image.json || echo '{}' > trivy-image.json
-os=$(jq -c '{dasar: ((.Metadata.OS.Family // "?") + " " + (.Metadata.OS.Name // "")),
-  total: ([.Results[]?.Vulnerabilities[]?] | length),
-  kritis: ([.Results[]?.Vulnerabilities[]? | select(.Severity == "CRITICAL")] | length),
-  tinggi: ([.Results[]?.Vulnerabilities[]? | select(.Severity == "HIGH")] | length),
-  ada_perbaikan: ([.Results[]?.Vulnerabilities[]? | select((.FixedVersion // "") != "")] | length)}' trivy-image.json)
+  -v "$PWD/.trivyignore:/kerja/.trivyignore:ro" \
+  "$TRIVY" image --scanners vuln --pkg-types os --ignorefile /kerja/.trivyignore --format json --quiet "$IMAGE" \
+  > trivy-image.json || echo '{}' > trivy-image.json
+
+# Gerbang OS, MODE PERINGATAN: dihitung dengan aturan yang sama seperti gerbang dependency (kritis atau tinggi
+# yang sudah punya versi perbaikan), tetapi TIDAK menggagalkan job. Dinaikkan menjadi pemblokir setelah
+# rincian temuannya ditinjau dan pengecualian yang perlu sudah dicatat di .trivyignore.
+os=$(jq -c '[.Results[]?.Vulnerabilities[]?] as $v
+  | ([$v[] | select((.Severity == "CRITICAL" or .Severity == "HIGH") and ((.FixedVersion // "") != ""))]
+     | unique_by([.VulnerabilityID, .PkgName]) | length) as $p
+  | {dasar: ((.Metadata.OS.Family // "?") + " " + (.Metadata.OS.Name // "")),
+     total: ($v | length),
+     kritis: ([$v[] | select(.Severity == "CRITICAL")] | length),
+     tinggi: ([$v[] | select(.Severity == "HIGH")] | length),
+     ada_perbaikan: ([$v[] | select((.FixedVersion // "") != "")] | length),
+     gerbang: (if .Metadata.OS == null then "pemindaian gagal" elif $p == 0 then "lulus" else "peringatan" end),
+     penahan_gerbang: $p}' trivy-image.json)
+
+# Rincian temuan kritis dan tinggi, yang punya perbaikan lebih dulu, untuk ditinjau dan dibaca rangkuman pagi.
+jq -r '[.Results[]?.Vulnerabilities[]? | select(.Severity == "CRITICAL" or .Severity == "HIGH")]
+  | unique_by([.VulnerabilityID, .PkgName])
+  | sort_by([(if (.FixedVersion // "") == "" then 1 else 0 end), (if .Severity == "CRITICAL" then 0 else 1 end), .PkgName])
+  | .[] | "\(.Severity) \(.VulnerabilityID) \(.PkgName) \(.InstalledVersion) -> \(.FixedVersion // "" | if . == "" then "belum ada perbaikan" else . end)"' \
+  trivy-image.json > trivy-image-daftar.txt 2>/dev/null || : > trivy-image-daftar.txt
 
 os=${os:-null}
+penahan_os=$(jq -r '.penahan_gerbang // 0' <<< "$os" 2>/dev/null || echo 0)
+if [ "${penahan_os:-0}" != 0 ]; then
+  echo "::warning title=Gerbang OS image ($KANDIDAT)::$penahan_os temuan kritis/tinggi di paket OS image sudah punya versi perbaikan. Mode peringatan: job tidak digagalkan. Rincian ada di anotasi TRIVYOS."
+fi
 hasil=gagal; [ "$uid" != 0 ] && [ "$kode" = 200 ] && hasil=lulus
 jq -n --arg h "$hasil" --arg u "$uid" --arg k "$kode" --argjson m "$ukuran_mb" --argjson b "$bangun" --argjson os "$os" \
   '{wadah: {hasil: $h, uid: $u, sehat: $k, ukuran_mb: $m, bangun_detik: $b, kerentanan_os: $os}}' > "$KELUARAN"
