@@ -3,6 +3,9 @@ name: Spike NestJS vs Spring Boot
 on:
   push:
     branches: [main, spike]
+  # PR dari Dependabot (base image Docker) diuji penuh sebelum di-merge. PR lain sudah teruji lewat push ke spike.
+  pull_request:
+    branches: [main]
   # Setiap hari pukul 06.17 WIB (23.17 UTC). Jadwal hanya berlaku untuk file yang ada di branch utama.
   schedule:
     - cron: "17 23 * * *"
@@ -18,6 +21,7 @@ concurrency:
 jobs:
   uji:
     name: ${{ matrix.nama }}
+    if: github.event_name != 'pull_request' || github.actor == 'dependabot[bot]'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     strategy:
@@ -88,15 +92,14 @@ jobs:
           distribution: temurin
           java-version: 21
 
-      - name: Catat versi dan ukuran mesin
+      # Disimpan ke hasil run (kunci "lingkungan"), supaya selisih kinerja antar-run bisa dikaitkan dengan
+      # jenis mesin runner. Juga mencatat digest base image yang dipakai Dockerfile kandidat.
+      - name: Catat mesin, versi, dan base image
         run: |
           echo "node $(node -v), npm $(npm -v)"
-          java -version 2>&1 | head -1 || true
           mvn -v 2>/dev/null | head -1 || true
-          psql --version
           docker --version
-          echo "inti prosesor: $(nproc)"
-          free -m | sed -n 2p
+          KELUARAN=ukur-lingkungan.json skrip/lingkungan.sh "${{ matrix.kandidat }}"
 
       - name: Skema (Flyway)
         run: >
@@ -261,6 +264,7 @@ jobs:
           saring='^\s*(ok|not ok)|^# (tests|pass|fail|skipped)|^\s*# (sha256|lama ekspor|ukuran)|error:|expected:|actual:'
           if [ -f uji.tap ]; then grep -E "$saring" uji.tap | skrip/catat.sh "UJI ${{ matrix.nama }}"; fi
           if [ -f uji-s6.tap ]; then grep -E "$saring" uji-s6.tap | skrip/catat.sh "UJIS6 ${{ matrix.nama }}"; fi
+          if [ -s trivy-image-daftar.txt ]; then skrip/catat.sh "TRIVYOS ${{ matrix.nama }}" < trivy-image-daftar.txt; fi
           {
             echo "## Hasil ${{ matrix.kandidat }}"
             echo '```json'
@@ -288,7 +292,7 @@ jobs:
             uji.tap
             uji-s6.tap
             trivy-*.json
-            trivy-daftar.txt
+            trivy-*.txt
 
       - name: Gagal bila ada uji yang tidak lulus
         run: |

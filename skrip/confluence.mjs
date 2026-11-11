@@ -43,6 +43,8 @@ const namaPemicu = { schedule: 'terjadwal', workflow_dispatch: 'manual', push: '
 const status = (r) => (!r ? 'tidak ada data' : r.lulus ? '✅ lulus' : '❌ gagal');
 const rentan = (x) => (!x ? '–' : `${x.kritis} / ${x.tinggi} / ${x.sedang}`);
 const rentanOs = (x) => (!x ? '–' : `${x.kritis} / ${x.tinggi} dari ${fmt(x.total)}`);
+const gerbangOs = (x) => (!x?.gerbang ? '–' : x.penahan ? `${x.gerbang} (${x.penahan} temuan sudah ada perbaikan)` : x.gerbang);
+const mesin = (l) => (!l ? '–' : `${l.inti ?? '?'} inti, ${l.ram_mb ? fmt(l.ram_mb / 1024) + ' GB' : '?'}, ${l.cpu ?? '?'}`);
 const uji = (l, g) => (l === null || l === undefined ? '–' : `${l} dari ${l + (g ?? 0)}`);
 
 const BARIS = [
@@ -61,6 +63,8 @@ const BARIS = [
   ['Kerentanan paket saat berjalan (kritis / tinggi / sedang)', (r) => rentan(r.rentan)],
   ['Ukuran image (MB)', (r) => fmt(r.image_mb)],
   ['Kerentanan OS di image (kritis / tinggi)', (r) => rentanOs(r.rentan_os)],
+  ['Gerbang OS image (mode peringatan)', (r) => gerbangOs(r.rentan_os)],
+  ['Mesin CI', (r) => mesin(r.lingkungan)],
 ];
 
 // Dua bentuk keluaran: "storage" untuk REST API Confluence, "html" untuk pembuatan awal lewat konektor.

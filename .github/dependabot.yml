@@ -1,0 +1,19 @@
+# Base image di Dockerfile dikunci ke digest (@sha256:...). Dependabot membuka PR mingguan bila ada digest
+# baru untuk tag yang sama, sehingga tambalan OS masuk lewat PR yang diuji penuh, bukan diam-diam saat build.
+# Hanya ekosistem docker: dependency npm dan Maven dinaikkan manual karena ada tambalan sementara
+# (overrides multer, properti tomcat.version dan jackson-bom.version) yang perlu ditinjau orang.
+version: 2
+updates:
+  - package-ecosystem: docker
+    directories:
+      - /app-nest
+      - /app-spring
+    schedule:
+      interval: weekly
+      day: monday
+      time: "07:00"
+      timezone: Asia/Jakarta
+    open-pull-requests-limit: 2
+    commit-message:
+      prefix: "Base image"
+    labels: []

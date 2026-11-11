@@ -1,11 +1,12 @@
 # Image NestJS untuk S6. Dibangun dari hasil build (folder dist), jadi jalankan `npx nest build` lebih dulu.
-FROM node:24-slim AS pasang
+# Base image dikunci ke digest supaya build bisa diulang persis; Dependabot membuka PR bila ada digest baru.
+FROM node:24-slim@sha256:01d566e8d94d8c619591d78652babfccd3c6992a3dffa9ed5ab39e11cf6c70e9 AS pasang
 WORKDIR /app
 COPY package.json package-lock.json ./
 # npm 12 dipakai karena lockfile proyek dibuat dengannya. Hanya dependency saat berjalan yang dipasang.
 RUN npm install -g npm@12 && npm ci --omit=dev
 
-FROM node:24-slim
+FROM node:24-slim@sha256:01d566e8d94d8c619591d78652babfccd3c6992a3dffa9ed5ab39e11cf6c70e9
 ENV NODE_ENV=production
 WORKDIR /app
 COPY --from=pasang /app/node_modules ./node_modules
