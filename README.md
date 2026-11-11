@@ -109,6 +109,23 @@ dan tanggal kedaluwarsa. Tambalan yang sedang berlaku:
 Tambalan lewat lockfile tanpa override: body-parser 2.3.0 ke 2.4.0 (CVE-2026-111181), karena
 express 5.2.1 meminta `^2.3.0`.
 
+### Image container
+
+- **Base image dikunci ke digest** (`FROM image:tag@sha256:...`) di kedua Dockerfile, sejak 11 November 2026.
+  Isi image tidak lagi berubah diam-diam antar-run. Dependabot (`.github/dependabot.yml`) memeriksa digest
+  baru setiap Senin dan membuka PR; PR itu menjalankan seluruh uji sebelum boleh di-merge.
+- **Gerbang OS, mode peringatan.** Paket sistem operasi di image dipindai dengan aturan yang sama seperti
+  gerbang dependency (kritis atau tinggi yang sudah punya perbaikan, dikurangi `.trivyignore`). Bila ada,
+  run memberi peringatan dan README menampilkan "peringatan", tetapi job tidak digagalkan. Rincian per CVE
+  ada di anotasi `TRIVYOS <varian>` dan artifact `trivy-image-daftar.txt`. Gerbang ini dinaikkan menjadi
+  pemblokir setelah beberapa run ditinjau.
+
+### Mesin runner
+
+Setiap varian mencatat model CPU, jumlah inti, RAM, image runner, versi Node, Java, PostgreSQL, dan
+digest base image di kunci `lingkungan` pada `hasil/riwayat.jsonl`. Ketiga varian dalam satu run bisa
+mendapat mesin yang berbeda; bandingkan kinerja dengan melihat kolom ini lebih dulu.
+
 ## Confluence
 
 Hasil yang sama juga ditulis ke halaman Confluence KCSI "Spike NestJS vs Spring Boot - Hasil Uji Harian"
