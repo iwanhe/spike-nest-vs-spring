@@ -14,6 +14,11 @@ updates:
       time: "07:00"
       timezone: Asia/Jakarta
     open-pull-requests-limit: 2
+    # Hanya digest baru untuk tag yang sama (tambalan OS). Naik versi besar runtime (Node 24 ke 26,
+    # Java 21 ke 25) adalah keputusan spike yang mengubah kandidat yang diuji, jadi tidak dibuka otomatis.
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
     commit-message:
       prefix: "Base image"
     labels: []
